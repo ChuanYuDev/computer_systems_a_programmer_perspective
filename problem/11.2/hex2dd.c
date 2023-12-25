@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         fprintf(stderr, "usage: %s <hex number>\n", argv[0]);
-        exit(0);
+        exit(1);
     }
 
     sscanf(argv[1], "%x", &addr);
