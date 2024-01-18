@@ -7,8 +7,8 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(CSAPP_PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include)
+# set(CSAPP_PUBLIC_HEADER ${CMAKE_SOURCE_DIR}/include)
 set(CSAPP_LIB csapp_lib)
 
-add_subdirectory(src)
-add_subdirectory(problem)
+add_subdirectory(external/csapp)
+add_subdirectory(app)
