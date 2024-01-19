@@ -11,4 +11,4 @@ endif()
 set(CSAPP_LIB csapp_lib)
 
 add_subdirectory(external/csapp)
-add_subdirectory(app)
+add_subdirectory(problems)
