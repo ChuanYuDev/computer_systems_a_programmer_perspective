@@ -14,6 +14,6 @@ long assign1(long x)
 
 long assign2(long x, long y)
 {
-    x = 0xFF0F0F0F;
+    x = 0xFFFFFFFFFF0F0F0F;
     return x;
 }

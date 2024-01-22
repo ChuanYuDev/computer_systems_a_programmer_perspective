@@ -14,9 +14,9 @@ xor:
 	.cfi_endproc
 .LFE0:
 	.size	xor, .-xor
-	.globl	assign
-	.type	assign, @function
-assign:
+	.globl	assign1
+	.type	assign1, @function
+assign1:
 .LFB1:
 	.cfi_startproc
 	endbr64
@@ -24,7 +24,18 @@ assign:
 	ret
 	.cfi_endproc
 .LFE1:
-	.size	assign, .-assign
+	.size	assign1, .-assign1
+	.globl	assign2
+	.type	assign2, @function
+assign2:
+.LFB2:
+	.cfi_startproc
+	endbr64
+	movq	$-15790321, %rax
+	ret
+	.cfi_endproc
+.LFE2:
+	.size	assign2, .-assign2
 	.ident	"GCC: (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0"
 	.section	.note.GNU-stack,"",@progbits
 	.section	.note.gnu.property,"a"
