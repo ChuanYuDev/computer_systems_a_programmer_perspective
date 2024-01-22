@@ -7,7 +7,8 @@ Book:
 - North American Edition (ISBN-10: 0-13-409266-X)
 
 Naming convention:
-- hx.x.c: homework problems
-- px.x.c: practice problems
+- problems/x.x.c: problem x.x including homework and practice
+- code_examples/xxx.c: code example in xxx page
 
-external/csapp: download from [csapp website](http://csapp.cs.cmu.edu/3e/code.html)
+external
+- csapp: download from [csapp website](http://csapp.cs.cmu.edu/3e/code.html)
