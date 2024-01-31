@@ -22,11 +22,11 @@
     - `xxx_yyy.c`: `yyy` code example in `xxx` page
 - `docs`: all the text answers
 - `external`:
-    - csapp: download from http://csapp.cs.cmu.edu/3e/code.html
+    - `code`: download from http://csapp.cs.cmu.edu/3e/code.html that contains all of the source files
 - `labs`:
     - `source`: original lab handout
 - `problems`: practice problems and homework problems code
-    - `problems / chapter number /x.x.c`: problem x.x code
+    - `problems / chapter number / x.x.c`: problem x.x code
 - `slides`: course slides including lectures' and reciatations'
 
 ### Reference:
