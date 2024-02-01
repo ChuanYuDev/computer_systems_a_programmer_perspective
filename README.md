@@ -24,7 +24,7 @@
 - `external`:
     - `code`: download from http://csapp.cs.cmu.edu/3e/code.html that contains all of the source files
 - `labs`:
-    - `source`: original lab handout
+    - `handout`: original lab handout
 - `problems`: practice problems and homework problems code
     - `problems / chapter number / x.x.c`: problem x.x code
 - `slides`: course slides including lectures' and reciatations'

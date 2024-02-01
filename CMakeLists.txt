@@ -9,5 +9,5 @@ endif()
 
 set(CSAPP_LIB csapp_lib)
 
-add_subdirectory(external/code)
+add_subdirectory(external)
 add_subdirectory(problems)
