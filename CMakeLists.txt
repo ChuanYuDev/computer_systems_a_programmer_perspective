@@ -10,5 +10,6 @@ endif()
 set(CSAPP_LIB csapp_lib)
 
 add_subdirectory(external)
+add_subdirectory(code_examples)
 add_subdirectory(problems)
 add_subdirectory(tests)
