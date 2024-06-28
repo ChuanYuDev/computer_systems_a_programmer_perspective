@@ -10,6 +10,6 @@ word Stat = [
     # icode == 0                : SHLT 
     icode == IHALT              : SHLT 
     1                           : SAOK;
-]
+];
 ```
 - Is `Stat` type `word`? `word`: 64-bit, only 4-bit is enough
