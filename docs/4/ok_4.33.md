@@ -14,5 +14,5 @@ rrmovq %rsp , %rax
 ```
 
 - When `popq %rsp` is in the write-back stage, `rrmovq` is in the decode stage
-- `rrmovq` will fetch `%rsp` via forwarding which is `W_valE` (value: `0x98`) not `W_valM` (value: `5`) if the order were reversed
-- This will cause `rrmovq` to set `rax` to `0x98` not `5`
+- `rrmovq` will fetch `%rsp` via forwarding which is `W_valE` (value: ~~`0x98`~~ `0x108`) not `W_valM` (value: `5`) if the order were reversed
+- This will cause `rrmovq` to set `rax` to ~~`0x98`~~ `0x108` not `5`

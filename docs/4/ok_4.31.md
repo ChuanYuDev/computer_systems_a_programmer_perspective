@@ -4,7 +4,8 @@ The block labeled `dstE` in the decode stage generates the register ID for the E
 ## Solution:
 ```
 word d_dstE = [
-    D_icode in { IRRMOVQ, IIRMOVQ, IOPQ}        : rB;
+    # D_icode in { IRRMOVQ, IIRMOVQ, IOPQ}      : rB;
+    D_icode in { IRRMOVQ, IIRMOVQ, IOPQ}        : D_rB;
     D_icode in { IPUSHQ, IPOPQ, ICALL, IRET }   : RRSP;
     1                                           : RNONE; # Don't write any register
 ];

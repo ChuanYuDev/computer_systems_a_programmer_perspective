@@ -3,22 +3,27 @@ Our second case in the HCL code for `d_valA` uses signal `e_dstE` to see whether
 
 ## Solution:
 
-- Assue condition codes are `100`
+- ~~Assue condition codes are `100`~~
 - Y86-64 program:
     ```
     irmovq $5, %rax
     irmovq $10, %rdx
+    xorq %rcx, %rcx     # CC = 100
     cmovne %rdx, %rax
-    rrmovq %rax, %rcx
+    # rrmovq %rax, %rcx
+    addq %rax, %rax
     ```
 - HCL for `e_dstE`
     ```
     word e_dstE = [
-        icode in { IRRMOVQ } && e_Cnd   : E_dstE;
+        E_icode in { IRRMOVQ } && e_Cnd : E_dstE;
         1                               : RNONE; # Don't write any register
     ];
     ```
 
 - When `cmovne` in the execute stage, `E_dstE` is `%rax`, `e_dstE` is RNONE because the condition is not satisfied
 
-- If we use `E_dstE` instead of `e_dstE`, `rrmovq` will set `%rax` to `10` not `5` which will cause `%rcx` to `10` not `5`
+- ~~If we use `E_dstE` instead of `e_dstE`, `rrmovq` will set `%rax` to `10` not `5` which will cause `%rcx` to `10` not `5`~~
+
+- If we use `E_dstE` instead of `e_dstE` for `d_valA`, `d_valA` will be set to `10` even the condition is not satisfied, `d_valB` will corretly be set to `5`
+    - The program will set `rax` to `15` not `10`

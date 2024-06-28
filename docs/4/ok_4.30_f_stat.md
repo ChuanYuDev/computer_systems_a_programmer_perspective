@@ -5,7 +5,8 @@ Write HCL code for the signal `f_stat`, providing the provisional status for the
 ```
 word f_stat = [
     imem_error          : SADR;
-    !f_instr_valid      : SINS;
+    #!f_instr_valid     : SINS;
+    !instr_valid        : SINS;
     f_icode == IHALT    : SHLT 
     1                   : SAOK;
 ];
