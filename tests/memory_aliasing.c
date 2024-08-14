@@ -14,8 +14,8 @@ void sum_rows1(double *a, double *b, long n)
 int main()
 {
     double A[9] = {0, 1, 2, 4, 8, 16, 32, 64, 128};
-    // double *B = A + 3;
-    double B[3] = A + 3;
+    double *B = A + 3;
+    // double B[3] = A + 3;
 
     sum_rows1(A, B, 3);
 
