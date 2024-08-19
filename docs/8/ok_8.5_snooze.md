@@ -13,4 +13,4 @@ Slept for 4 of 5 secs.
 
 ## Solution:
 
-Code: [snooze](../../problems/8/8.5.c)
+Code: [snooze](../../problems/8/8.5_snooze.c)
