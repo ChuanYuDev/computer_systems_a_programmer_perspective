@@ -1,6 +1,4 @@
-# Practice Problem 2.1 
-Solution page 143
-
+# Practice Problem 2.1 (solution page 143)
 Perform the following number conversions:
 
 A. `0x39A7F8` to binary
