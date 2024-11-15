@@ -1,7 +1,5 @@
-# Practice Problem 2.5
-Solution page 144
-
-Consider the following three calls to show_bytes:
+# Practice Problem 2.5 (solution page 144)
+Consider the following three calls to `show_bytes`:
 
 ```c
 int val = Ox87654321;
@@ -15,8 +13,8 @@ Indicate the values that will be printed by each call on a little-endian machine
 ![](images/2.5.jpg)
 
 ## Solution:
-A. Little endian: `21`  Big endian: `87`
+A. Little endian: `21`          Big endian: `87`
 
-B. Little endian: `21 43` Big endian: `87 65`
+B. Little endian: `21 43`       Big endian: `87 65`
 
-C. Little endian: `21 43 65`Big endian: `87 65 43`
+C. Little endian: `21 43 65`    Big endian: `87 65 43`

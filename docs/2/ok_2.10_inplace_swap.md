@@ -1,6 +1,4 @@
-# Practice Problem 2.10
-solution page 146
-
+# Practice Problem 2.10 (solution page 146)
 As an application of the property that `a ^ a = 0` for any bit vector `a`, consider the following program:
 
 ![](images/2.10.jpg)

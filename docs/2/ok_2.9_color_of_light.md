@@ -1,6 +1,4 @@
-# Practice Problem 2.9
-solution page 146
-
+# Practice Problem 2.9 (solution page 146)
 Computers generate color pictures on a video screen or liquid crystal display by mixing three different colors of light: red, green, and blue. Imagine a simple scheme, with three different lights, each of which can be turned on or off, project­ing onto a glass screen:
 
 ![](images/2.9.jpg)
