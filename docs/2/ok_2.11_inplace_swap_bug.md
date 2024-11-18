@@ -27,4 +27,4 @@ B. `x` and `y` is the same value, in step 1, changing `*y` will cause `*x` chang
 
 C. Make `first` will not be equal to `last`: line 4 `first < last`
 
-If cnt = `2k + 1`, when `first = last = k`, there is no need to swap the value.
+- If cnt = `2k + 1`, when `first = last = k`, there is no need to swap the value.

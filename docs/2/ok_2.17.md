@@ -1,7 +1,5 @@
-# Practice Problem 2.17
-Solution page 148
-
-Assuming $w = 4$, we can assign a numeric value to each possible hexadecimal digit, assuming either an unsigned or a two's-complement interpretation. Fill in the following table according to these interpretations by writing out the nonzero powers of 2 in the summations shown in Equations 2. 1 and 2.3:
+# Practice Problem 2.17 (solution page 148)
+Assuming $w = 4$, we can assign a numeric value to each possible hexadecimal digit, assuming either an unsigned or a two's-complement interpretation. Fill in the following table according to these interpretations by writing out the nonzero powers of 2 in the summations shown in Equations 2.1 and 2.3:
 
 ![](images/2.17.jpg)
 

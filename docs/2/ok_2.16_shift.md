@@ -1,6 +1,4 @@
-# Practice Problem 2.16
-solution page 148
-
+# Practice Problem 2.16 (solution page 148)
 Fill in the table below showing the effects of the different shift operations on single­-byte quantities. The best way to think about shift operations is to work with binary representations. Convert the initial values to binary, perform the shifts, and then convert back to hexadecimal. Each of the answers should be 8 binary digits or 2 hexadecimal digits.
 
 ![](images/2.16.jpg)

@@ -8,26 +8,34 @@ To see how these operations relate to the C bit-level operations, assume we have
 ![](images/2.13.jpg)
 
 ## Solution:
-`bis` is the same as `OR |`
+- Answer:
+    ```c
+    int bool_or(int x, int y) {
+        int result = bis(x, y);
+        return result;
+    }
 
-```
-x           0 0 1 1
-y           0 1 0 1
-^           0 1 1 0
-bic(x, y)   0 0 1 0
-bic(y, x)   0 1 0 0
-```
+    int bool_xor(int x, int y) {
+        int result = bis(bic(x, y), bic(y, x));
+        return result;
+    }
+    ```
 
-`EXCLUSIVE-OR ^` is `OR` on `bic(x, y)` and `bic(y, x)`
+- `bool_or`:
+    - In terms of masking, `x | y` is if the bit of `y` is `1`, then modify `x` to `1`, otherwise keep `x` unchanged
 
-```c
-int bool_or(int x, int y) {
-    int result = bis(x, y);
-    return result;
-}
+    - This definition is the same as `bis` function
 
-int bool_xor(int x, int y) {
-    int result = bis(bic(x, y), bic(y, x));
-    return result;
-}
-```
+- `bool_xor`:
+    - In terms of masking, `x & ~y` is if the bit of `y` is `1`, then modify `x` to `0`, otherwise keep `x` unchanged
+    - This definition is the same as `bic` function which means `x & ~y` is equivalent to `bic(x, y)` 
+
+    - ` x ^ y = (x & ~y) | (~x & y) = bis(bic(x, y), bic(y, x))`
+
+        ```
+        x           0 0 1 1
+        y           0 1 0 1
+        ^           0 1 1 0
+        bic(x, y)   0 0 1 0
+        bic(y, x)   0 1 0 0
+        ```

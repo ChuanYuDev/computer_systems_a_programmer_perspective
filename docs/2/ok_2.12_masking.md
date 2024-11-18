@@ -10,8 +10,12 @@ B. All but the least significant byte of `x` complemented,with the least signifi
 C. The least significant byte set to all ones, and all other bytes of x left un­changed. [0x876543FF]
 
 ## Solution:
-A. `x & 0` can set bit to `0`. Expression: `x & 0xFF`
+A. Expression: `x & 0xFF`
 
-B. `x ^ 1` can set bit complemented. Expression: `x ^ (~0xFF)`
+- `x & 0` can set bit to `0`. 
 
-C. `x | 1` can set bit to `1`. Expression: `x | 0xFF`
+B. Expression: `x ^ (~0xFF)`
+- `x ^ 1` can set bit complemented. 
+
+C. Expression: `x | 0xFF`
+- `x | 1` can set bit to `1`
