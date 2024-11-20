@@ -1,11 +1,9 @@
-# Practice Problem 2.23
-solution page 150
-
+# Practice Problem 2.23 (solution page 150)
 Consider the following C functions:
 
 ![](images/2.23.jpg)
 
-Assume these are executed as a 32-bit program on a machine that uses two's-complement arithmetic. Assume also that right shifts of signed values are per­ formed arithmetically, while right shifts of unsigned values are performed logically.
+Assume these are executed as a 32-bit program on a machine that uses two's-complement arithmetic. Assume also that right shifts of signed values are performed arithmetically, while right shifts of unsigned values are performed logically.
 
 A. Fill in the following table showing the effect of these functions for several example arguments. You will find it more convenient to work with a hexa­decimal representation. Just remember that hex digits 8 through F have their most significant bits equal to 1.
 
@@ -25,9 +23,11 @@ A. Type conversion precedence is higher than bit shift
 
 B.
 - `func1(w)`: remain the least 8 significant bits, set other bits 0
-    - return unsigned the least significant byte 
+    - Return unsigned the least significant byte
+    - Return an integer ranging between 0 and 255
 
 - `func2(w)`: 
-    - return signed the least significant byte 
+    - Return signed the least significant byte 
+    - Return an integer ranging between -128 and 127
 
    

@@ -1,6 +1,4 @@
-# Practice Problem 2.22
-solution page 150
-
+# Practice Problem 2.22 (solution page 150)
 Show that each of the following bit vectors is a two's-complement representation of -5 by applying Equation 2.3:
 
 A. [1011]
