@@ -1,6 +1,4 @@
-# Practice Problem 2.30
-solution page 153
-
+# Practice Problem 2.30 (solution page 153)
 Write a function with the following prototype:
 
 ```c

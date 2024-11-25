@@ -1,5 +1,4 @@
-# Practice Problem 2.32
-solution page 153
+# Practice Problem 2.32 (solution page 153)
 
 You are assigned the task of writing code for a function `tsub_ok`,with arguments `x` and `y`, that will return `1` if computing `x - y` does not cause overflow. Having just written the code for Problem 2.30, you write the following:
 

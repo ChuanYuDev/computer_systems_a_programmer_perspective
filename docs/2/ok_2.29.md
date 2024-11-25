@@ -1,7 +1,5 @@
-# Practice Problem 2.29
-solution page 152
-
-FiJI in the following table in the style of Figure 2.25. Give the integer values of the 5-bit arguments, the values of both their integer and two's-complement sums, the bit-level representation of the two's-complement sum, and the case from the derivation of Equation 2.13
+# Practice Problem 2.29 (solution page 152)
+Fill in the following table in the style of Figure 2.25. Give the integer values of the 5-bit arguments, the values of both their integer and two's-complement sums, the bit-level representation of the two's-complement sum, and the case from the derivation of Equation 2.13
 
 ![](images/2.29.jpg)
 

@@ -1,6 +1,4 @@
-# Practice Problem 2.33
-solution page 153
-
+# Practice Problem 2.33 (solution page 153)
 We can represent a bit pattern of length $w = 4$ with a single hex digit. For a two's­ complement interpretation of these digits, fill in the following table to determine the additive inverses of the digits shown:
 
 ![](images/2.33.jpg)
