@@ -1,1 +1,0 @@
-add_executable(9.5_mmapcopy 9.5_mmapcopy.c)

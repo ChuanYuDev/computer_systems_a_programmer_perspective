@@ -1,1 +1,2 @@
-add_executable(45_show_bytes 45_show_bytes.c)
+add_library(${CSAPP_LIB} code/src/csapp.c)
+target_include_directories(${CSAPP_LIB} PUBLIC ${CMAKE_SOURCE_DIR}/external/code/include)

@@ -1,6 +1,1 @@
-add_executable(conversion conversion.c)
-add_executable(memory_aliasing memory_aliasing.c)
-add_executable(operator_precedence operator_precedence.c)
-add_executable(pointer pointer.c)
-add_executable(shift shift.c)
-add_executable(void_increment void_increment.c)
+add_executable(45_show_bytes 45_show_bytes.c)
