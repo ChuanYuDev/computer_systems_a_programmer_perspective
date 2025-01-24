@@ -143,7 +143,16 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+    /* 
+     * x ^ y = (x & ~y) | (~x & y)
+     *
+     * ~(x | y)= (~x) & (~y)
+     * x | y = ~((~x) & (~y))
+     * 
+     * x ^ y = (x & ~y) | (~x & y) = ~((~(x & ~y)) & (~(~x & y)))
+     */
+
+    return ~((~(x & ~y)) & (~(~x & y)));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -152,9 +161,11 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
+    /* 
+     * 32-bit minimum two's complement integer: 0x80000000
+     */
 
-  return 2;
-
+    return 1 << 31;
 }
 //2
 /*
@@ -165,7 +176,17 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+    /*
+     * 32-bit maximum two's complement number is 0x7fffffff
+     *
+     * !(x ^ ~(x + 1)) if x is the maximum or -1, returns 1, 0 otherwise
+     * 
+     * & !!(x ^ ~0) is intended to exclude -1
+     * Because && is illegal operator, we use !! to convert x ^ ~0 to 0 or 1, if it is the case, operator & and && are the same
+     */
+
+    // return !(x ^ ~(1 << 31));
+    return !(x ^ ~(x + 1)) & !!(x ^ ~0);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +197,22 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+    /* 
+     * Check bytes one by one
+     * If the odd numbered bits are 1, Exclusive-OR (^) with 0xAA will generate 0 on odd numbered bits 
+     * Do OR (|) operators with 4 bytes and extract the odd numbered bits with the AND (&) operator
+     * Finally, apply the logical NOT (!) operator to convert the result to 0 or 1
+     */
+
+    int x8 = x >> 8;
+    int x16 = x8 >> 8;
+    int x24 = x16 >> 8;
+    int result = x ^ 0xAA;
+
+    result = result | (x8 ^ 0xAA);
+    result = result | (x16 ^ 0xAA);
+    result = result | (x24 ^ 0xAA);
+    return !(result & 0xAA);
 }
 /* 
  * negate - return -x 
@@ -186,7 +222,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+    return ~x + 1;
 }
 //3
 /* 
@@ -199,7 +235,15 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+    /*
+     * Bit number 4-31 is 0x0000003                 !((x >> 4) ^ 3)
+     * If bit 3 is 0, bit 0-2 can be any digits     !x3
+     * If bit 3 is 1, bit 1-2 must be 00            (x3 & !(x & 6))            
+     */
+
+    int x3 = (x >> 3) & 1;
+
+    return (!((x >> 4) ^ 3)) & ((!x3) | (x3 & !(x & 6)));
 }
 /* 
  * conditional - same as x ? y : z 
@@ -209,7 +253,17 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+    /*
+     * If x == 0, !x << 31 >> 31 gives 0xffffffff
+     * If x == 1, !x << 31 >> 31 gives 0
+     * 
+     * z + ~y + 1 is equivalent to z - y
+     * 
+     * If x == 0, ((!x << 31 >> 31) & (z + ~y + 1)) gives z - y, z after adding y
+     * If x == 1, ((!x << 31 >> 31) & (z + ~y + 1)) gives 0, y after adding y
+     */
+    
+    return ((!x << 31 >> 31) & (z + ~y + 1)) + y;
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
