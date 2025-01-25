@@ -262,7 +262,7 @@ int conditional(int x, int y, int z) {
      * If x == 0, ((!x << 31 >> 31) & (z + ~y + 1)) gives z - y, z after adding y
      * If x == 1, ((!x << 31 >> 31) & (z + ~y + 1)) gives 0, y after adding y
      */
-    
+
     return ((!x << 31 >> 31) & (z + ~y + 1)) + y;
 }
 /* 
@@ -273,7 +273,24 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+    /*
+     * Get x the most significant bit x31 by (x >> 31) & 1
+     * y is the same as x
+     * 
+     * x <= y is equivalent to (y - x) >= 0 excluding negative and positive overflow
+     * Negative overflow: y is negative (y31 is 1) and x is non negative (x31 is 0)
+     * Positive overflow: y is non negative (y31 is 0) and x is negative (x31 is 1)
+     * 
+     * (x31 | !y31) detects negative overflow, if it is the case, the value is 0 and the function returns 0
+     * (x31 & !y31) detects positive overflow, if it is the case, the value is 1 and the function returns 1
+     * 
+     * If none of them occurs, we check y + ~x + 1 (equivalent to y -x) is greater or equal to 0 
+     */
+
+    int x31 = (x >> 31) & 1;
+    int y31 = (y >> 31) & 1;
+
+    return (x31 | !y31) & ((x31 & !y31) | !(((y + ~x + 1) >> 31) & 1));
 }
 //4
 /* 
@@ -285,7 +302,20 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+    /*
+     * If any bit in x is 1, the least significant bit of final result will 1
+     *
+     * Apply NOT and AND operator to result will reverse and extract the least significant bit
+     */
+
+    int result = x | (x >> 16);
+
+    result = result | (result >> 8);
+    result = result | (result >> 4);
+    result = result | (result >> 2);
+    result = result | (result >> 1);
+
+    return (~result) & 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -300,7 +330,52 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+    /*
+     * To determine the position of leftmost 1
+     *
+     * If x is negative, flip the bits using xs = (x >> 31) ^ x
+     * 
+     * First right shift 16 bits, check whether the leftmost 1 is already moved (!x16)
+     * 
+     * If moved, right shift 8 bits further, if not, right shift 8 bits instead of 16 
+     * 
+     * The rest is similar, we can get r16, r8, r4, r2, r1 which are the shift amounts
+     * 
+     * The position of leftmost 1 is r = r16 + r8 + r4 + r2 + r1
+     * 
+     * If xs is 0, r = 0, the total minimum number is 1
+     * e.g. if x = -1, then xs = 0, r = 0, the minimum number is 1 (0b1)
+     * 
+     * If xs is not 0, the total minimum number is r + 2
+     * e.g. if x = 1, then r = 0, the minimum number is 2 (0b01)
+     * 
+     */
+
+    int xs = (x >> 31) ^ x;
+    int x16, r16, x8, r8, x4, r4, x2, r2, x1, r1, r;
+
+    x16 = xs >> 16;
+    r16 = !!x16 << 4;
+    x16 = xs >> r16;
+
+    x8 = x16 >> 8;
+    r8 = !!x8 << 3;
+    x8 = x16 >> r8;
+
+    x4 = x8 >> 4;
+    r4 = !!x4 << 2;
+    x4 = x8 >> r4;
+
+    x2 = x4 >> 2;
+    r2 = !!x2 << 1;
+    x2 = x4 >> r2;
+
+    x1 = x2 >> 1;
+    r1 = !!x1;
+
+    r = r16 + r8 + r4 + r2 + r1;
+
+    return r + (1 << (!!xs));
 }
 //float
 /* 
