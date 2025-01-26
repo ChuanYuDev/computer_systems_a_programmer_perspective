@@ -335,9 +335,9 @@ int howManyBits(int x) {
      *
      * If x is negative, flip the bits using xs = (x >> 31) ^ x
      * 
-     * First right shift 16 bits, check whether the leftmost 1 is already moved (!x16)
+     * First right shift 16 bits, check whether the leftmost 1 is already moved out (!x16)
      * 
-     * If moved, right shift 8 bits further, if not, right shift 8 bits instead of 16 
+     * If not moved out, right shift 8 bits further, if moved out, right shift 8 bits instead of 16 
      * 
      * The rest is similar, we can get r16, r8, r4, r2, r1 which are the shift amounts
      * 
