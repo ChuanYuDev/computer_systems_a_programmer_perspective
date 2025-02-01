@@ -390,7 +390,58 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+    /*
+     * Single-precision float: s: 1, exp: 8, frac: 23
+     *
+     * exp mask or exp is all one: 0111 1111 1000 0...0, 0x7f800000 
+     * e is the unsigned number e[k-1]e[k-2]...e[0]
+     * 
+     * If e = 0
+     * Denormalized floating point number, M = 0.f[n-1]f[n-2]...f[0]
+     * If M < 0.5, 2 * uf is still denormalized which does frac << 1 and keep sign bit unchanged
+     * If M >= 0.5, 2 * uf changes to normalized number which e = 1 and frac << 1. 
+     * Interestingly, we can use the f[n_1] left shifted to be e[0] in exp
+     * Therefore, the formula is the same as M < 0.5
+     * 
+     * If 0 < e < 254
+     * Normalized floating point number, return exp + 1
+     * 
+     * If e = 254
+     * return infinity with the sign bit same as uf
+     * 
+     * If e = 255
+     * Return uf which is NaN or infinity
+     * 
+     */
+
+    unsigned exp_all_one = 0x7f800000;
+    unsigned exp = uf & exp_all_one;
+    unsigned sign = uf & 0x80000000;
+
+    // e == 0, denormalized
+    if (exp == 0)
+    {
+        return sign | (uf << 1);
+    }
+
+    // e == 254
+    else if (exp == 0x7f000000)
+    {
+        return sign | exp_all_one;
+    }
+
+    // e == 255, NaN or infinity
+    else if (exp == exp_all_one)
+    {
+        return uf;
+    }
+
+    // 0 < e < 254 
+    else
+    {
+        exp += 0x00800000;
+        return (uf & 0x807fffff) | exp;
+    }
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
