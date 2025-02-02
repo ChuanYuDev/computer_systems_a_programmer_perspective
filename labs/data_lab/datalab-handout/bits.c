@@ -456,7 +456,61 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+    /*
+     * bias = 2 ^ (k - 1) - 1 = 127
+     * Normalized: E = e - bias
+     * Denormalized: E = 1 - bias
+     * int_before_shift sets sign + exp bits (total 9 bits) to 00000001, 1 corresponds to normalized floating point M = 1 + f 
+     * 
+     * If e > 157
+     *     If e = 255, NaN or infinity, out of range
+     *     If e <= 254, normalized number, E > 30
+     *         If sign bit is 0, M = 1.fn-1fn-2...f0, 1 will be shifted to have the value 2^E > 2^30 which is out of range
+     *         If sign bit is 1
+     *             E = 31, 1 can be shifted to bit 31, bit 0-22 have to be 0, this value is the same as out of range value
+     *             Other value will be out of range
+     * 
+     * If 151 <= e <= 157, 24<= E <= 30
+     *     Consider f0, the weight is 2 ^ (-23), after multiply 2 ^ E, the weight is 2^ (E - 23) which is at bit (E - 23), hence the result is equivalent to left shift int_before_shift E - 23 bits
+     * 
+     * If 127<= e <= 150, 0 <= E <= 23
+     *     Consider 1 in exp, the weight is 2 ^ E, so far 1 is at bit 23, hence the result is equivalent to right shift int_before_shift 23 - E
+     * 
+     * If e < 127
+     *     If e >= 1, E <= -1, the value of float number < 2 ^ E * (2 - epsilon) < 1, return 0
+     *     If e = 0, denormalized number, E = -126, the float number < 1, return 0
+     *  
+     * If sign is 1, the float number is negative, because 0 <= E <= 30, all the positive number x has corresponding negative number ~x + 1
+     */
+
+    unsigned e = (uf & 0x7f800000) >> 23;
+    
+    unsigned int_before_shift = (uf & 0x007fffff) | 0x00800000;
+    unsigned result;
+
+    if (e > 157)
+    {
+        return 0x80000000;
+    }
+    else if (e >= 151)
+    {
+        result = int_before_shift << (e - 150);
+    }
+    else if (e >= 127)
+    {
+        result = int_before_shift >> (150 - e);
+    }
+    else
+    {
+        return 0;
+    }
+
+    if ((uf >> 31) == 1)
+    {
+        result = ~result + 1;
+    }
+
+    return result;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
