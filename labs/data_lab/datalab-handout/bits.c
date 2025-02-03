@@ -470,10 +470,10 @@ int floatFloat2Int(unsigned uf) {
      *             E = 31, 1 can be shifted to bit 31, bit 0-22 have to be 0, this value is the same as out of range value
      *             Other value will be out of range
      * 
-     * If 151 <= e <= 157, 24<= E <= 30
+     * If 151 <= e <= 157, 24 <= E <= 30
      *     Consider f0, the weight is 2 ^ (-23), after multiply 2 ^ E, the weight is 2^ (E - 23) which is at bit (E - 23), hence the result is equivalent to left shift int_before_shift E - 23 bits
      * 
-     * If 127<= e <= 150, 0 <= E <= 23
+     * If 127 <= e <= 150, 0 <= E <= 23
      *     Consider 1 in exp, the weight is 2 ^ E, so far 1 is at bit 23, hence the result is equivalent to right shift int_before_shift 23 - E
      * 
      * If e < 127
@@ -526,5 +526,31 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    /*
+     * For normalized value, E = e - bias which ranges between -126 and 127
+     * 1 <= M < 2, the maximum 2.0 ^ x of the single-precision floating point is 2 ^ (127), the minimum is 2 ^ (-126) 
+     * 
+     * For denormalized value, E = 1- bias = -126
+     * The minimum is 2 ^ (-126) * 2 ^ (-23) = 2 ^ (-149)
+     */
+
+    if (x >= 128)
+    {
+        return 0x7f800000;
+    }
+
+    else if (x >= -126)
+    {
+        return (x + 127) << 23;
+    }
+
+    else if (x >= -149)
+    {
+        return 1 << (x + 149);
+    }
+
+    else
+    {
+        return 0;
+    }
 }
