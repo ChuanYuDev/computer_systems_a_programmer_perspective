@@ -9,6 +9,7 @@
     - [Phase 4](#phase-4)
     - [Phase 5](#phase-5)
     - [Phase 6](#phase-6)
+    - [Secret phase](#secret-phase)
 
 ## Introduction
 - A "binary bomb" is a program provided to students as an object code file
@@ -28,19 +29,19 @@
 - 2025/2/4 - 
 
 ## Solution
-- Generate the symbol table and store it in the file `symbol_table`
+- Generate the symbol table and store it in the file `bomb/symbol_table`
 
     ```
     objdump -t bomb > symbol_table
     ```
 
-- Disassemble all of the code in the bomb and store in `disassemble`
+- Disassemble all of the code in the bomb and store in `bomb/disassemble`
 
     ```
     objdump -d bomb > disassemble
     ```
 
-- Display the printable strings in the bomb and store in `strings`
+- Display the printable strings in the bomb and store in `bomb/strings`
 
     ```
     strings bomb > strings
@@ -62,7 +63,7 @@
     Breakpoint 1, 0x0000000000400ee0 in phase_1 ()
     (gdb) disas phase_1
     Dump of assembler code for function phase_1:
-    => 0x0000000000400ee0 <+0>:     sub    $0x8,%rsp
+    =>  0x0000000000400ee0 <+0>:     sub    $0x8,%rsp
         0x0000000000400ee4 <+4>:     mov    $0x402400,%esi
         0x0000000000400ee9 <+9>:     call   0x401338 <strings_not_equal>
         0x0000000000400eee <+14>:    test   %eax,%eax
@@ -104,7 +105,57 @@
     ```
 
 ### Phase 2
+- `phase_2` machine code from `disassemble` file
+
+    ![](./images/phase_2.png)
+    - Line 361 call function `read_six_numbers`
+    - First argument `%rdi` is `input`
+    - Second argument `%rsi` is `%rsp`
+
+- Function `read_six_numbers`
+
+    - The machine code from `disassemble` file
+
+        ![](./images/read_six_numbers.png)
+
+    - The stack frame diagram
+
+        ![](./images/read_six_numbers_stack.png)
+    
+    - `read_six_numbers` calls function `sscanf`
+        - Argument 1 `rdi`: `input`
+        - Argument 2 `rsi`: `0x4025c3`
+
+            ```
+            (gdb) x/s 0x4025c3
+            0x4025c3:       "%d %d %d %d %d %d"
+            ```
+        
+        - Argument 3 `rdx`: `-0x28`
+            - This is the relative address based on the `phase_2` stack frame largest address, arguments 4-8 are similar
+
+        - Argument 4 `rcx`: `-0x24`
+        - Argument 5 `r8`: `-0x20`
+        - Argument 6 `r9`: `-0x1c`
+        - Argument 7 `(%rsp)`: `-0x18`
+        - Argument 8 `0x8(%rsp)`: `-0x14`
+    
+    - The `read_six_numbers` will read 6 integers of `int` type to fill the caller stack frame from `-0x28` to `-0x14`, `0x4` size each
+
+- `phase_2` stack frame diagram after Line 361
+
+    ![](./images/phase_2_stack.png)
+    - Based on the machine code, we can get the values of 6 integers from "relative" address `-0x28` to `-0x14` must be `1`, `2`, `4`, `8`, `16`, and `32`, otherwise the bomb explodes
+
+- Therefore, the phase 2 string is 
+
+    ```
+    1 2 4 8 16 32
+    ```
+
+
 ### Phase 3
 ### Phase 4
 ### Phase 5
 ### Phase 6
+### Secret phase
