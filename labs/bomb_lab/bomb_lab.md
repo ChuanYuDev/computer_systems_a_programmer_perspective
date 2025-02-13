@@ -153,8 +153,53 @@
     1 2 4 8 16 32
     ```
 
-
 ### Phase 3
+- Function `phase_3`
+    - The machine code from `disassemble` file
+
+        ![](./images/phase_3.png)
+
+    - The stack frame diagram
+
+        ![](./images/phase_3_stack.png)
+
+    - `phase_3` will first call function `sscanf`
+
+        - Argument 1 `rdi`: `input`
+        - Argument 2 `rsi`: `0x4025cf`
+
+            ```
+            (gdb) x/s 0x4025cf
+            0x4025cf:       "%d %d"
+            ```
+        
+        - Argument 3 `rdx`: `-0x10`
+        - Argument 4 `rcx`: `-0xc`
+
+    - `sscanf` will read two integers from `input` string and stored them in the stack frame `-0x10` and `-0xc`
+
+    - Line 394, `ja` is intended for comparing two integers of `unsigned` type, therefore the integer stored at `-0x10` should be in the range of `[0, 0x7]`
+
+    - Line 396, the memory values starting from `0x402470` are eight addresses in `phase_3`
+
+        ```
+        (gdb) x/8g 0x402470
+        0x402470:       0x0000000000400f7c      0x0000000000400fb9
+        0x402480:       0x0000000000400f83      0x0000000000400f8a
+        0x402490:       0x0000000000400f91      0x0000000000400f98
+        0x4024a0:       0x0000000000400f9f      0x0000000000400fa6
+        ```
+    
+    - The integer stored at `-0x10` can be any value between `[0, 0x7]`, the `jmp` instruction will jump to corresponding address, and assigned one value to `%eax`
+
+    - The value at address `-0xc` must be equal to the `%eax`
+
+- Therefore one of the `phase_3` string is 
+
+    ```
+    0 207
+    ```
+
 ### Phase 4
 ### Phase 5
 ### Phase 6
