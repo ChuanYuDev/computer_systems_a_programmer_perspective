@@ -201,6 +201,48 @@
     ```
 
 ### Phase 4
+- `phase_4`
+    - The machine code
+
+        ![](./images/phase_4.png)
+    
+    - The stack frame
+
+        ![](./images/phase_4_stack.png)
+
+    - Line 455 shows the value stored at `-0x10` are in the range `[0, 0xe]`
+
+    - Line 463 indicates the value stored at `-0xc` are `0`
+
+- `func4`
+    - The machine code
+
+        ![](./images/func4.png)
+    
+    - Arguments
+        1. `rdi`: value at `-0x10` of `phase_4` stack frame, `[0, 0xe]`
+        1. `rsi`: 0
+        1. `rdx`: `0xe`
+
+    - Line 462 shows the value returned by `func4` needs to be `0`
+
+    - If `%ecx == %edi`, the function will return with `0`
+
+    - If `%ecx != %edi`, the function will recursively call itself either at `0x400fe9` or `0x400ffe`
+        - If `0x400fe9` is called, the return value will multiply by 2 (line 434)
+
+        - If `0x400ffe` is called, the return value will multiply by 2 and add 1 (line 441)
+    
+    - After testing the `rdi` value between `[0, 0xe]`, I find only the value `0x7` will directly cause `%ecx == %edi`, and the `func4` will return with `0`
+        - Otherwise `0x400ffe` will be called, the return value will never be `0`
+    
+- Therefore the `phase_3` string is 
+
+    ```
+    7 0
+    ```
+
 ### Phase 5
+
 ### Phase 6
 ### Secret phase
