@@ -194,7 +194,7 @@
 
     - The value at address `-0xc` must be equal to the `%eax`
 
-- Therefore one of the `phase_3` string is 
+- Therefore one of the phase 3 string is 
 
     ```
     0 207
@@ -221,7 +221,7 @@
     
     - Arguments
         1. `rdi`: value at `-0x10` of `phase_4` stack frame, `[0, 0xe]`
-        1. `rsi`: 0
+        1. `rsi`: `0`
         1. `rdx`: `0xe`
 
     - Line 462 shows the value returned by `func4` needs to be `0`
@@ -236,13 +236,69 @@
     - After testing the `rdi` value between `[0, 0xe]`, I find only the value `0x7` will directly cause `%ecx == %edi`, and the `func4` will return with `0`
         - Otherwise `0x400ffe` will be called, the return value will never be `0`
     
-- Therefore the `phase_3` string is 
+- Therefore the phase 4 string is 
 
     ```
     7 0
     ```
 
 ### Phase 5
+- `phase_5`
+    - The machine code
+
+        ![](./images/phase_5.png)
+    
+    - The stack frame
+
+        ![](./images/phase_5_stack.png)
+
+- Line 472-479
+    1. Indicates the `input` should be 6 characters
+    1. Set the stack block `-0x8`-`-0x1` to `%fs:0x28`
+
+- Line 482-490 instruction code
+    1. Extracts the `input` character one by one
+    
+    1. Gets the low-order 4 bits of it, and store it in the `%edx`
+        - So `%edx` value range is `[0x0, 0xf]`
+
+    1. Gets the byte from `0x4024b0(%rdx)` and store it to the `%ecx` and `-0x10 + %rax`
+        - The string store at `0x4024b0`
+
+            ```
+            (gdb) x/s 0x4024b0
+            0x4024b0 <array.3449>:  "maduiersnfotvbylSo you think you can stop the bomb with ctrl-c, do you?"
+            ```
+
+    1. The initial value of `%rax` is 0 (line 500), add `%rax` by 1, repeat the code block until it reaches 6
+
+- Line 491-495
+    1. Set the `-0xa` value to 0 as the null terminating character
+    1. Compare the string at `0x40245e` with string at `-0x10`
+
+        ```
+        (gdb) x/s 0x40245e
+        0x40245e:       "flyers"
+        ```
+
+- Based on the string at `0x4024b0` and `0x40245e`, we can get the `input` character 4 lower-bit values are
+
+    ```
+    maduiersnfotvbyl
+    0123456789012345
+
+    `f`: 0x9
+    `l`: 0xf
+    `y`: 0xe
+    `e`: 0x5
+    `r`: 0x6
+    `s`: 0x7
+    ```
+
+- Based on the ascii table we get one of the phase 5 strings is
+    ```
+    9On5FW
+    ```
 
 ### Phase 6
 ### Secret phase
