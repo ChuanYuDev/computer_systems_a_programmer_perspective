@@ -2,6 +2,7 @@
 ## Table of contents
 - [Introduction](#introduction)
 - [`ctarget` segmentation fault bug on Ubuntu 22.04](#ctarget-segmentation-fault-bug-on-ubuntu-2204)
+
 ## Introduction
 - Note: This is the 64-bit successor to the 32-bit Buffer Lab
 
