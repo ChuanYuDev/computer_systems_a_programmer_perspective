@@ -314,8 +314,20 @@
     - From the beginning to `0x401153`:
         - Indicate #0-5 are distinct and the range of them is `[1, 6]`
 
+        ```
+        (gdb) x/6wx $rsp
+        0x7fffffffde00: 0x00000006      0x00000001      0x00000002      0x00000005
+        0x7fffffffde10: 0x00000004      0x00000003
+        ```
+
     - Up to `0x40116f`: 
         - #0-5 are subtracted by 7
+
+        ```
+        (gdb) x/6wx $rsp
+        0x7fffffffde00: 0x00000001      0x00000006      0x00000005      0x00000002
+        0x7fffffffde10: 0x00000003      0x00000004
+        ```
 
     - Up to `0x4011ab`
         - The stack `-0x30`-`-0x8`
@@ -331,15 +343,69 @@
             5: `0x603310`
 
             6: `0x603320`
+        
+        ```
+        (gdb) x/10gx 0x6032d0
+        0x6032d0 <node1>:       0x000000010000014c      0x00000000006032e0
+        0x6032e0 <node2>:       0x00000002000000a8      0x00000000006032f0
+        0x6032f0 <node3>:       0x000000030000039c      0x0000000000603300
+        0x603300 <node4>:       0x00000004000002b3      0x0000000000603310
+        0x603310 <node5>:       0x00000005000001dd      0x0000000000603320
+        ```
+        
+        ```
+        (gdb) x/6gx $rsp+0x20
+        0x7fffffffde20: 0x00000000006032d0      0x0000000000603320
+        0x7fffffffde30: 0x0000000000603310      0x00000000006032e0
+        0x7fffffffde40: 0x00000000006032f0      0x0000000000603300
+        ```
     
     - Up to `0x4011d2`
         - 4 bytes word addressing at `#10`-`#15`
         - `(#10) >= (#11) >= (#12) >= (#13) >= (#14) >= (#15)` 
 
+        ```
+        (gdb) x/wx 0x6032d0
+        0x6032d0 <node1>:       0x0000014c
+        (gdb) x/wx 0x6032e0
+        0x6032e0 <node2>:       0x000000a8
+        (gdb) x/wx 0x6032f0
+        0x6032f0 <node3>:       0x0000039c
+        (gdb) x/wx 0x603300
+        0x603300 <node4>:       0x000002b3
+        (gdb) x/wx 0x603310
+        0x603310 <node5>:       0x000001dd
+        (gdb) x/wx 0x603320
+        0x603320 <node6>:       0x000001bb
+        ```
+
 - The phase 6 string is 
 
     ```
     4 3 2 1 6 5
+    ```
+### Phase defused
+- `phase_defused`
+    - [The machine code](./bomb/phase_defused)
+
+    - The stack frame
+
+        ![](./images/phase_defused_stack.png)
+
+- If `%rip = 0x4015e1`, the num of input strings should be 6
+- If `%rip = 0x401604`, the fourth input should include a string after `7 0`
+
+    ```
+    (gdb) x/s 0x402619
+    0x402619:       "%d %d %s"
+    (gdb) x/s 0x603870
+    0x603870 <input_strings+240>:   "7 0"
+    ```
+- If `%rip = 0x401617`, the string must be `DrEvil`
+
+    ```
+    (gdb) x/s 0x402622
+    0x402622:       "DrEvil"
     ```
 
 ### Secret phase
