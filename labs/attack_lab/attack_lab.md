@@ -1,6 +1,7 @@
 # Attack Lab
 ## Table of contents
 - [Introduction](#introduction)
+- [Duration](#duration)
 - [`ctarget` segmentation fault bug on Ubuntu 22.04](#ctarget-segmentation-fault-bug-on-ubuntu-2204)
 
 ## Introduction
@@ -19,6 +20,9 @@
     - You'll need to run your targets using the `-q` option so that they don't try to contact a non-existent grading server
     
     - If you're an instructor with a CS:APP acount, you can download the solutions here
+
+## Duration
+- 2025/2/15 - 
 
 ## `ctarget` segmentation fault bug on Ubuntu 22.04
 - No matter what strings you input or whether or not you input string, the `ctarget` will always cause segmentation fault

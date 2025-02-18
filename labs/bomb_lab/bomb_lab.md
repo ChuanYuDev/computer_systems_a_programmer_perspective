@@ -301,4 +301,45 @@
     ```
 
 ### Phase 6
+- `phase_6`
+    - Machine code
+
+        [`phase_6` machine code](./bomb/phase_6)
+
+    - Stack frame
+
+        ![](./images/phase_6_stack.png)
+
+- The instructions
+    - From the beginning to `0x401153`:
+        - Indicate #0-5 are distinct and the range of them is `[1, 6]`
+
+    - Up to `0x40116f`: 
+        - #0-5 are subtracted by 7
+
+    - Up to `0x4011ab`
+        - The stack `-0x30`-`-0x8`
+
+            1: `0x6032d0`
+
+            2: `0x6032e0`
+
+            3: `0x6032f0`
+
+            4: `0x603300`
+
+            5: `0x603310`
+
+            6: `0x603320`
+    
+    - Up to `0x4011d2`
+        - 4 bytes word addressing at `#10`-`#15`
+        - `(#10) >= (#11) >= (#12) >= (#13) >= (#14) >= (#15)` 
+
+- The phase 6 string is 
+
+    ```
+    4 3 2 1 6 5
+    ```
+
 ### Secret phase
