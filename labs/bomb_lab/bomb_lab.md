@@ -408,4 +408,76 @@
     0x402622:       "DrEvil"
     ```
 
+- Then we can enter the secret phase
+
 ### Secret phase
+- `secret_phase`
+    - [The machine code](./bomb/secret_phase)
+
+    - We use `#0` to denote the result of function `strtol` 
+        - `0 <= %eax = #0 - 1 <= 0x3e8`
+        - `0 <= #0 low 4 bytes <= 0x369`
+    
+    - The function `fun7` must return `0x2` 
+
+- `fun7`
+    - The machine code
+
+        ![](./images/fun7.png)
+    
+    - Arguments
+        1. `edi`: `0x6030f0`
+        1. `esi`: `0x low 4 bytes`
+    
+    - The inner most function returns 0
+
+    - There are 2 spots where `fun7` is called
+        1. `0x401217`, it will double the result and return
+
+        1. `0x40122d`, it will double the result and add 1, and return
+    
+    - So if we want `fun7` return `0x2`, we call `0x401217`, then `0x40122d`, then the inner most function
+        - Call `0x401217` first, line 605, `0x24 = %edx > %esi` 
+
+            ```
+            (gdb) print /x $rdi
+            $7 = 0x6030f0
+            (gdb) x/wx $rdi
+            0x6030f0 <n1>:  0x00000024
+            ```
+        
+        - Call `0x40122d` then, `0x8 < %esi`
+
+            ```
+            (gdb) x/gx 0x6030f0+0x8
+            0x6030f8 <n1+8>:        0x0000000000603110
+            (gdb) x/wx 0x603110
+            0x603110 <n21>: 0x00000008
+            ```
+
+        - This time, the `fun7` will directly return `0`, `esi = 0x16`
+
+            ```
+            (gdb) x/gx 0x603110+0x10
+            0x603120 <n21+16>:      0x0000000000603150
+            (gdb) x/wx 0x603150
+            0x603150 <n32>: 0x00000016
+            ```
+
+- Therefore, `#0 low 4 bytes` is `0x16`, one of the secret phase strings is
+
+    ```
+    22
+    ```
+    - We can get other secret phase string such as 
+
+        ```
+        4294967318
+        ```
+    
+        Due to
+
+        ```
+        (gdb) print /d 0x100000016
+        $10 = 4294967318
+        ```
