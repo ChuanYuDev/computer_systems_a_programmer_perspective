@@ -22,7 +22,7 @@
     - If you're an instructor with a CS:APP acount, you can download the solutions here
 
 ## Duration
-- 2025/2/15 - 
+- 2025/2/19 - 
 
 ## `ctarget` segmentation fault bug on Ubuntu 22.04
 - No matter what strings you input or whether or not you input string, the `ctarget` will always cause segmentation fault
@@ -77,3 +77,12 @@
 
 - **What is the relation between the self-made `printf.so` and `movaps` instruction?**
     - Does self-made `printf.so` ensure the stack frame address satisfy a 16-byte alignment?
+
+- How to use `gdb` with `LD_PRELOAD`
+
+    ```
+    gdb your_program
+
+    (gdb) set environment LD_PRELOAD ./printf.so
+    (gdb) start
+    ```

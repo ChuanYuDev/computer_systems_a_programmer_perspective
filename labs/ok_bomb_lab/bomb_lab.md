@@ -26,7 +26,7 @@
     - If you're an instructor with a CS:APP account, then you can download the solution
 
 ## Duration
-- 2025/2/4 - 
+- 2025/2/4 - 2025/2/18
 
 ## Solution
 - Generate the symbol table and store it in the file `bomb/symbol_table`
