@@ -1,0 +1,42 @@
+0000000000401eb4 <launch>:
+  401eb4:	55                   	push   %rbp
+  401eb5:	48 89 e5             	mov    %rsp,%rbp
+  401eb8:	48 83 ec 10          	sub    $0x10,%rsp
+  401ebc:	48 89 fa             	mov    %rdi,%rdx
+  401ebf:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
+  401ec6:	00 00 
+  401ec8:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+  401ecc:	31 c0                	xor    %eax,%eax
+  401ece:	48 8d 47 1e          	lea    0x1e(%rdi),%rax
+  401ed2:	48 83 e0 f0          	and    $0xfffffffffffffff0,%rax
+  401ed6:	48 29 c4             	sub    %rax,%rsp
+  401ed9:	48 8d 7c 24 0f       	lea    0xf(%rsp),%rdi
+  401ede:	48 83 e7 f0          	and    $0xfffffffffffffff0,%rdi
+  401ee2:	be f4 00 00 00       	mov    $0xf4,%esi
+  401ee7:	e8 14 ee ff ff       	call   400d00 <memset@plt>
+  401eec:	48 8b 05 ad 25 20 00 	mov    0x2025ad(%rip),%rax        # 6044a0 <stdin@GLIBC_2.2.5>
+  401ef3:	48 39 05 d6 25 20 00 	cmp    %rax,0x2025d6(%rip)        # 6044d0 <infile>
+  401efa:	75 14                	jne    401f10 <launch+0x5c>
+  401efc:	be b4 32 40 00       	mov    $0x4032b4,%esi
+  401f01:	bf 01 00 00 00       	mov    $0x1,%edi
+  401f06:	b8 00 00 00 00       	mov    $0x0,%eax
+  401f0b:	e8 e0 ee ff ff       	call   400df0 <__printf_chk@plt>
+  401f10:	c7 05 c2 25 20 00 00 	movl   $0x0,0x2025c2(%rip)        # 6044dc <vlevel>
+  401f17:	00 00 00 
+  401f1a:	b8 00 00 00 00       	mov    $0x0,%eax
+  401f1f:	e8 44 fa ff ff       	call   401968 <test>
+  401f24:	83 3d bd 25 20 00 00 	cmpl   $0x0,0x2025bd(%rip)        # 6044e8 <is_checker>
+  401f2b:	74 14                	je     401f41 <launch+0x8d>
+  401f2d:	bf c1 32 40 00       	mov    $0x4032c1,%edi
+  401f32:	e8 89 ed ff ff       	call   400cc0 <puts@plt>
+  401f37:	b8 00 00 00 00       	mov    $0x0,%eax
+  401f3c:	e8 ca fa ff ff       	call   401a0b <check_fail>
+  401f41:	bf cc 32 40 00       	mov    $0x4032cc,%edi
+  401f46:	e8 75 ed ff ff       	call   400cc0 <puts@plt>
+  401f4b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+  401f4f:	64 48 33 04 25 28 00 	xor    %fs:0x28,%rax
+  401f56:	00 00 
+  401f58:	74 05                	je     401f5f <launch+0xab>
+  401f5a:	e8 81 ed ff ff       	call   400ce0 <__stack_chk_fail@plt>
+  401f5f:	c9                   	leave  
+  401f60:	c3                   	ret    
