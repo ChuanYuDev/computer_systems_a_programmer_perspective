@@ -29,7 +29,7 @@
     - If you're an instructor with a CS:APP acount, you can download the solutions here
 
 ## Duration
-- 2025/2/19 - Due: 2025/2/28
+- 2025/2/19 - 2025/2/26
 
 ## `ctarget` segmentation fault bug on Ubuntu 22.04
 - No matter what strings you input or whether or not you input string, the `ctarget` will always cause segmentation fault
