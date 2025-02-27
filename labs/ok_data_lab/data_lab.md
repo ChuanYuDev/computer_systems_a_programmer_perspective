@@ -1,4 +1,10 @@
 # Data Lab
+
+## Table of content
+- [Introduction](#introduction)
+- [Duration](#duration)
+- [Chapter](#chapter)
+
 ## Introduction
 - Students implement simple logical, two's complement, and floating point functions, but using a highly restricted subset of C
     - For example, they might be asked to compute the absolute value of a number using only bit-level operations and straightline code
@@ -7,3 +13,6 @@
 
 ## Duration
 - 2025/1/21 - 2025/2/3
+
+## Chapter
+- Chapter 2: Representing and Manipulating Information

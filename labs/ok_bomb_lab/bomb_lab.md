@@ -2,6 +2,7 @@
 ## Table of contents
 - [Introduction](#introduction)
 - [Duration](#duration)
+- [Chapter](#chapter)
 - [Solution](#solution)
     - [Phase 1](#phase-1)
     - [Phase 2](#phase-2)
@@ -27,6 +28,9 @@
 
 ## Duration
 - 2025/2/4 - 2025/2/18
+
+## Chapter
+- Chapter 3: Machine-Level Representation of Programs
 
 ## Solution
 - Generate the symbol table and store it in the file `bomb/symbol_table`

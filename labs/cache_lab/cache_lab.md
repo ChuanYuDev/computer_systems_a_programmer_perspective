@@ -2,6 +2,7 @@
 ## Table of contents
 - [Introduction](#introduction)
 - [Duration](#duration)
+- [Chapter](#chapter)
 
 ## Introduction
 - At CMU we use this lab in place of the Performance Lab
@@ -14,3 +15,7 @@
 
 ## Duration
 - 2025/2/27 - Due: 2025/3/8
+
+## Chapter
+- Part A: Chapter 6: The Memory Hierarchy
+- Part B: Chapter 5: Optimizing Program Performance

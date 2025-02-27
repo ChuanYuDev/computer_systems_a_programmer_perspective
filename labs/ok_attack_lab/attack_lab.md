@@ -2,6 +2,7 @@
 ## Table of contents
 - [Introduction](#introduction)
 - [Duration](#duration)
+- [Chapter](#chapter)
 - [`ctarget` segmentation fault bug on Ubuntu 22.04](#ctarget-segmentation-fault-bug-on-ubuntu-2204)
 
 - [Solution](#solution)
@@ -30,6 +31,9 @@
 
 ## Duration
 - 2025/2/19 - 2025/2/26
+
+## Chapter
+- Chapter 3: Machine-Level Representation of Programs
 
 ## `ctarget` segmentation fault bug on Ubuntu 22.04
 - No matter what strings you input or whether or not you input string, the `ctarget` will always cause segmentation fault
