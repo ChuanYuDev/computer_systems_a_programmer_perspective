@@ -4,6 +4,43 @@
 #include <getopt.h>
 #include "cachelab.h"
 
+
+struct cache_line
+{
+    struct cache_line *ptr_prev;
+    struct cache_line *ptr_next;
+    long tag_valid_bit;
+};
+
+struct cache_line **initialize_cache(int num_set, int num_cahce_line)
+{
+    struct cache_line **cache_ptr = (struct cache_line **)malloc(sizeof(struct cache_line *) * num_set);
+    struct cache_line *cache_line_ptr = NULL;
+
+    for (int i = 0; i < num_set; i++)
+    {
+        cache_ptr[i] = (struct cache_line *)malloc(sizeof(struct cache_line) * num_cahce_line);
+        cache_line_ptr = cache_ptr[i];
+
+        cache_line_ptr->ptr_prev = NULL;
+
+        for (int j = 1; j < num_cahce_line - 1; j++)
+        {
+            cache_line_ptr[j].ptr_prev = cache_line_ptr + (j - 1);
+            cache_line_ptr[j].ptr_next = cache_line_ptr + (j + 1);
+        }
+
+        cache_line_ptr[num_cahce_line - 1].ptr_next = NULL;
+
+        if (num_cahce_line > 1)
+        {
+            cache_line_ptr[num_cahce_line - 1].ptr_prev = cache_line_ptr + (num_cahce_line - 2);
+        }
+    }
+
+    return cache_ptr;
+}
+
 int main(int argc, char *argv[])
 {
     /* Parse the arguments */
@@ -45,7 +82,11 @@ int main(int argc, char *argv[])
 
     // exit(EXIT_SUCCESS);
 
-    // int s = 2, E = 1, b = 4;
+    int num_set_bit = 2, num_cache_line = 2;
+    int num_set = 1 << num_set_bit;
+    // num_block_bit = 4;
+
+    
 
     /* Read the trace file */
 
@@ -73,6 +114,14 @@ int main(int argc, char *argv[])
 
 
     /* Initialize the cache */
+    struct cache_line **cache_ptr = initialize_cache(num_set, num_cache_line);
+
+    for (int i = 0; i < num_set; ++i)
+    {
+        free(cache_ptr[i]);
+    }
+
+    free(cache_ptr);
 
     /* Simulate */
 
