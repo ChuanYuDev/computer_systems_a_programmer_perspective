@@ -19,3 +19,10 @@
 ## Chapter
 - Part A: Chapter 6: The Memory Hierarchy
 - Part B: Chapter 5: Optimizing Program Performance
+
+## Solution:
+
+### Part A
+- Overview of the simulated cache structure
+
+    ![](./images/part_a.png)
