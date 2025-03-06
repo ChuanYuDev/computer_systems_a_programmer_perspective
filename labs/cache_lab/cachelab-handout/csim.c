@@ -5,7 +5,7 @@
 #include "cachelab.h"
 
 static int num_set_bit, num_cache_line, num_block_bit, verbose;
-static int hit_count = 0, miss_count = 0, eviction_count = 0;
+static int hit_count, miss_count, eviction_count;
 
 struct cache_line
 {
@@ -14,39 +14,73 @@ struct cache_line
     unsigned long tag_valid_bit;
 };
 
+void free_cache(struct cache_line **cache_ptr, int num_set)
+{
+    struct cache_line *line_ptr = NULL, *line_ptr_next = NULL;
+
+    for (int i = 0; i < num_set; ++i)
+    {
+        line_ptr = cache_ptr[i];
+
+        while (line_ptr != NULL)
+        {
+            line_ptr_next = line_ptr->ptr_next;
+            free((void *)line_ptr);
+
+            line_ptr = line_ptr_next;
+        }
+    }
+
+    free((void *) cache_ptr);
+}
+
 struct cache_line **initialize_cache(int num_set)
 {
-    struct cache_line **cache_ptr = (struct cache_line **)malloc(sizeof(struct cache_line *) * num_set);
-    struct cache_line *cache_line_ptr = NULL;
+    struct cache_line **cache_ptr = (struct cache_line **)calloc(num_set, sizeof(struct cache_line *));
+
+    if (!cache_ptr)
+        return NULL;
+
+    struct cache_line *line_ptr = NULL;
+    struct cache_line *line_ptr_prev = NULL;
 
     for (int i = 0; i < num_set; i++)
     {
-        cache_ptr[i] = (struct cache_line *)malloc(sizeof(struct cache_line) * num_cache_line);
-        cache_line_ptr = cache_ptr[i];
+        line_ptr_prev = (struct cache_line *)malloc(sizeof(struct cache_line));
 
-        /* initialize ptr_prev, ptr_next */
-        cache_line_ptr->ptr_prev = NULL;
-
-        for (int j = 1; j < num_cache_line - 1; j++)
+        /* If allcation is failed, the blocks already allocated will be freed */
+        if (!line_ptr_prev)
         {
-            cache_line_ptr[j].ptr_prev = cache_line_ptr + (j - 1);
-            cache_line_ptr[j].ptr_next = cache_line_ptr + (j + 1);
+            free_cache(cache_ptr, num_set);
+
+            return NULL;
         }
 
-        cache_line_ptr[num_cache_line - 1].ptr_next = NULL;
+        line_ptr_prev->ptr_prev = NULL;
+        line_ptr_prev->tag_valid_bit = 0;
 
-        if (num_cache_line > 1)
+        cache_ptr[i] = line_ptr_prev;
+
+        for (int j = 1; j < num_cache_line; j++)
         {
-            cache_line_ptr[num_cache_line - 1].ptr_prev = cache_line_ptr + (num_cache_line - 2);
-            cache_line_ptr->ptr_next = cache_line_ptr + 1;
+            line_ptr = (struct cache_line *)malloc(sizeof(struct cache_line));
+
+            if (!line_ptr)
+            {
+                line_ptr_prev->ptr_next = NULL;
+                free_cache(cache_ptr, num_set);
+
+                return NULL;
+            }
+
+            line_ptr_prev->ptr_next = line_ptr;
+            line_ptr->ptr_prev = line_ptr_prev;
+            line_ptr->tag_valid_bit = 0;
+
+            line_ptr_prev = line_ptr;
         }
 
-        /* initialize tag bit, valid bit */
-
-        for (int j = 0; j < num_cache_line; j++)
-        {
-            cache_line_ptr[j].tag_valid_bit = 0;
-        }
+        line_ptr_prev->ptr_next = NULL;
     }
 
     return cache_ptr;
@@ -137,59 +171,48 @@ void simulate(struct cache_line **cache_ptr, unsigned long address)
 int main(int argc, char *argv[])
 {
     /* Parse the arguments */
+    int opt;
+    char *filename = NULL;
 
+    while ((opt = getopt(argc, argv, "vs:E:b:t:")) != -1)
+    {
+        switch (opt)
+        {
+            case 'v':
+                verbose = 1;
+                break;
 
-    // int flags, opt;
-    // int nsecs, tfnd;
+            case 's':
+                num_set_bit = atoi(optarg);
+                break;
+            
+            case 'E':
+                num_cache_line = atoi(optarg);
+                break;
+            
+            case 'b':
+                num_block_bit = atoi(optarg);
+                break;
+            
+            case 't':
+                filename = optarg;
+                break;
 
-    // nsecs = 0;
-    // tfnd = 0;
-    // flags = 0;
-    // while ((opt = getopt(argc, argv, "nt:")) != -1) {
-    //     switch (opt) {
-    //     case 'n':
-    //         flags = 1;
-    //         break;
-    //     case 't':
-    //         nsecs = atoi(optarg);
-    //         tfnd = 1;
-    //         break;
-    //     default: /* '?' */
-    //         fprintf(stderr, "Usage: %s [-t nsecs] [-n] name\n",
-    //                 argv[0]);
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
-
-    // printf("flags=%d; tfnd=%d; nsecs=%d; optind=%d\n",
-    //         flags, tfnd, nsecs, optind);
-
-    // if (optind >= argc) {
-    //     fprintf(stderr, "Expected argument after options\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // printf("name argument = %s\n", argv[optind]);
-
-    // /* Other code omitted */
-
-    // exit(EXIT_SUCCESS);
-
-    num_set_bit = 4, num_cache_line = 2, num_block_bit = 4;
-    verbose = 1;
+            default: /* '?' */
+                fprintf(stderr, "Usage: %s [-v] -s <s> -E <E> -b <b> -t <tracefile> \n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
 
     int num_set = 1 << num_set_bit;
 
     /* Initialize the cache */
     struct cache_line **cache_ptr = initialize_cache(num_set);
 
-    struct cache_line **cache_ptr_original = (struct cache_line **)malloc(sizeof(struct cache_line *) * num_set);
-
-    for (int i = 0; i < num_set; i++)
-        cache_ptr_original[i] = cache_ptr[i];
+    if (!cache_ptr)
+        return EXIT_FAILURE;
 
     /* Read the trace file */
-    char *filename = "traces/yi.trace";
     char line[256];
 
     FILE *file = fopen(filename, "r");
@@ -204,9 +227,6 @@ int main(int argc, char *argv[])
         {
             sscanf(line, " %c %lx,%d", &op, &address, &size);
 
-            if (verbose)
-                printf("%c %lx,%d", op, address, size);
-
             switch(op)
             {
                 case 'I':
@@ -216,6 +236,9 @@ int main(int argc, char *argv[])
                 case 'M': 
                 case 'L':
                 case 'S':
+
+                    if (verbose)
+                        printf("%c %lx,%d", op, address, size);
 
                     /* Simulate */
                     simulate(cache_ptr, address);
@@ -241,13 +264,7 @@ int main(int argc, char *argv[])
     }
 
     /* Free cache */
-    for (int i = 0; i < num_set; ++i)
-    {
-        free(cache_ptr_original[i]);
-    }
-
-    free(cache_ptr);
-    free(cache_ptr_original);
+    free_cache(cache_ptr, num_set);
 
     /* Print summary */
     printSummary(hit_count, miss_count, eviction_count);
