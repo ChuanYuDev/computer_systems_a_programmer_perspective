@@ -22,7 +22,7 @@ void free_cache(struct cache_line **cache_ptr, int num_set)
     {
         line_ptr = cache_ptr[i];
 
-        while (line_ptr != NULL)
+        while (line_ptr)
         {
             line_ptr_next = line_ptr->ptr_next;
             free((void *)line_ptr);
@@ -89,16 +89,21 @@ struct cache_line **initialize_cache(int num_set)
 /* Move the node first, make it the most recently used */
 void move_first(struct cache_line **set_ptr, struct cache_line *line_ptr)
 {
-    if (line_ptr->ptr_prev == NULL)
+    if (!line_ptr->ptr_prev)
         return;
     
+    /* Handle the line previous and next line relation */
     line_ptr->ptr_prev->ptr_next = line_ptr->ptr_next;
 
-    if (line_ptr->ptr_next != NULL)
+    if (line_ptr->ptr_next)
         line_ptr->ptr_next->ptr_prev = line_ptr->ptr_prev;
     
-    line_ptr->ptr_prev = NULL;
+    /* Handle the line and the first line relation */
     line_ptr->ptr_next = *set_ptr;
+    (*set_ptr)->ptr_prev = line_ptr;
+
+    /* Handle the line and cache array relation */
+    line_ptr->ptr_prev = NULL;
     *set_ptr = line_ptr;
 
     return;
@@ -114,7 +119,7 @@ void simulate(struct cache_line **cache_ptr, unsigned long address)
     struct cache_line *line_ptr = cache_ptr[set_index];
     struct cache_line *line_lru_ptr = NULL;
 
-    while(line_ptr != NULL)
+    while(line_ptr)
     {
         valid_bit = line_ptr->tag_valid_bit & 1;
 
@@ -141,7 +146,7 @@ void simulate(struct cache_line **cache_ptr, unsigned long address)
             }
         }
 
-        if (line_ptr->ptr_next == NULL)
+        if (!line_ptr->ptr_next)
         {
             line_lru_ptr = line_ptr;
         }
@@ -149,7 +154,7 @@ void simulate(struct cache_line **cache_ptr, unsigned long address)
         line_ptr = line_ptr->ptr_next;
     }
 
-    if (line_ptr == NULL)
+    if (!line_ptr)
     {
         miss_count++;
         eviction_count++;
