@@ -22,16 +22,43 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
-    // printf("A: %p, B: %p", A, B);
+    /* M = 32, N = 32 */
+    int bsize = 8, tmp;
 
-    int i, j, tmp;
+    for (int ii = 0; ii < N; ii += bsize)
+    {
+        for (int jj = 0; jj < M; jj += bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                    {
+                        tmp = A[i][j];
+                        B[j][i] = tmp;
+                    }
+                }
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                    {
+                        if (i != j)
+                        {
+                            tmp = A[i][j];
+                            B[j][i] = tmp;
+                        }
+                    }
 
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < M; j++) {
-            tmp = A[i][j];
-            B[j][i] = tmp;
+                    B[i][i] = A[i][i];
+                }
+            }
         }
-    }    
+    }
 }
 
 /* 
@@ -56,6 +83,90 @@ void trans(int M, int N, int A[N][M], int B[M][N])
 
 }
 
+char trans_no_tmp_desc[] = "Simple row-wise scan transpose without temporary value";
+void trans_no_tmp(int M, int N, int A[N][M], int B[M][N])
+{
+    int i, j;
+
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < M; j++) {
+            B[j][i] = A[i][j];
+        }
+    }    
+
+}
+
+/*
+ * Matrix transpose without special handling diagonal blocks
+ */
+char transpose_no_diagonal_desc[] = "Transpose no diagonal";
+void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
+{
+    /* M = 32, N = 32 */
+    int bsize = 8, tmp;
+
+    for (int ii = 0; ii < N; ii += bsize)
+    {
+        for (int jj = 0; jj < M; jj += bsize)
+        {
+            for (int i = ii; i < ii + bsize; i++)
+            {
+                for (int j = jj; j < jj + bsize; j++)
+                {
+                    tmp = A[i][j];
+                    B[j][i] = tmp;
+                }
+            }
+        }
+    }
+}
+
+
+/*
+ * Matrix transpose with special handling diagonal blocks
+ */
+char transpose_diagonal_desc[] = "Transpose diagonal";
+void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
+{
+    /* M = 32, N = 32 */
+    int bsize = 8, tmp;
+
+    for (int ii = 0; ii < N; ii += bsize)
+    {
+        for (int jj = 0; jj < M; jj += bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                    {
+                        tmp = A[i][j];
+                        B[j][i] = tmp;
+                    }
+                }
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                    {
+                        if (i != j)
+                        {
+                            tmp = A[i][j];
+                            B[j][i] = tmp;
+                        }
+                    }
+
+                    B[i][i] = A[i][i];
+                }
+            }
+        }
+    }
+}
+
 /*
  * registerFunctions - This function registers your transpose
  *     functions with the driver.  At runtime, the driver will
@@ -71,6 +182,11 @@ void registerFunctions()
     /* Register any additional transpose functions */
     registerTransFunction(trans, trans_desc); 
 
+    registerTransFunction(trans_no_tmp, trans_no_tmp_desc); 
+
+    registerTransFunction(transpose_no_diagonal, transpose_no_diagonal_desc);
+
+    registerTransFunction(transpose_diagonal, transpose_diagonal_desc);
 }
 
 /* 
