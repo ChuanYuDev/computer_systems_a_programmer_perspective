@@ -22,8 +22,12 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
-    /* M = 32, N = 32 */
-    int bsize = 8, tmp;
+    int bsize, tmp;
+    if (M == 32 && N == 32)
+        bsize = 8;
+
+    else if (M == 64 && N == 64)
+        bsize = 4;
 
     for (int ii = 0; ii < N; ii += bsize)
     {
@@ -102,8 +106,12 @@ void trans_no_tmp(int M, int N, int A[N][M], int B[M][N])
 char transpose_no_diagonal_desc[] = "Transpose no diagonal";
 void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
 {
-    /* M = 32, N = 32 */
-    int bsize = 8, tmp;
+    int bsize, tmp;
+    if (M == 32 && N == 32)
+        bsize = 8;
+
+    else if (M == 64 && N == 64)
+        bsize = 4;
 
     for (int ii = 0; ii < N; ii += bsize)
     {
@@ -121,15 +129,19 @@ void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
     }
 }
 
-
 /*
  * Matrix transpose with special handling diagonal blocks
  */
 char transpose_diagonal_desc[] = "Transpose diagonal";
 void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
 {
-    /* M = 32, N = 32 */
-    int bsize = 8, tmp;
+    int bsize;
+
+    if (M == 32 && N == 32)
+        bsize = 8;
+
+    else if (M == 64 && N == 64)
+        bsize = 4;
 
     for (int ii = 0; ii < N; ii += bsize)
     {
@@ -140,10 +152,7 @@ void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
                 for (int i = ii; i < ii + bsize; i++)
                 {
                     for (int j = jj; j < jj + bsize; j++)
-                    {
-                        tmp = A[i][j];
-                        B[j][i] = tmp;
-                    }
+                        B[j][i] = A[i][j];
                 }
             }
             /* Special handling diagonal blocks */
@@ -154,12 +163,56 @@ void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
                     for (int j = jj; j < jj + bsize; j++)
                     {
                         if (i != j)
-                        {
-                            tmp = A[i][j];
-                            B[j][i] = tmp;
-                        }
+                            B[j][i] = A[i][j];
                     }
 
+                    /* Special handling diagonal elements */
+                    B[i][i] = A[i][i];
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Matrix transpose with special block scanning order
+ * Analysis is in trace_64_1748
+ */
+char transpose_block_scan_desc[] = "Transpose block scanning order";
+void transpose_block_scan(int M, int N, int A[N][M], int B[M][N])
+{
+    int bsize;
+
+    if (M == 32 && N == 32)
+        bsize = 8;
+
+    else if (M == 64 && N == 64)
+        bsize = 4;
+
+    for (int jj = 0; jj < M; jj += bsize)
+    {
+        for (int ii = 0; ii < N; ii += bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + bsize; i++)
+                {
+                    for (int j = jj; j < jj + bsize; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
                     B[i][i] = A[i][i];
                 }
             }
@@ -180,13 +233,15 @@ void registerFunctions()
     registerTransFunction(transpose_submit, transpose_submit_desc); 
 
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc); 
+    // registerTransFunction(trans, trans_desc); 
 
-    registerTransFunction(trans_no_tmp, trans_no_tmp_desc); 
+    // registerTransFunction(trans_no_tmp, trans_no_tmp_desc); 
 
     registerTransFunction(transpose_no_diagonal, transpose_no_diagonal_desc);
 
     registerTransFunction(transpose_diagonal, transpose_diagonal_desc);
+
+    registerTransFunction(transpose_block_scan, transpose_block_scan_desc);
 }
 
 /* 
