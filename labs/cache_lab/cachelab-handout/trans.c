@@ -106,12 +106,7 @@ void trans_no_tmp(int M, int N, int A[N][M], int B[M][N])
 char transpose_no_diagonal_desc[] = "Transpose no diagonal";
 void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
 {
-    int bsize, tmp;
-    if (M == 32 && N == 32)
-        bsize = 8;
-
-    else if (M == 64 && N == 64)
-        bsize = 4;
+    int bsize = 8;
 
     for (int ii = 0; ii < N; ii += bsize)
     {
@@ -121,8 +116,7 @@ void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
             {
                 for (int j = jj; j < jj + bsize; j++)
                 {
-                    tmp = A[i][j];
-                    B[j][i] = tmp;
+                    B[j][i] = A[i][j];
                 }
             }
         }
@@ -135,13 +129,7 @@ void transpose_no_diagonal(int M, int N, int A[N][M], int B[M][N])
 char transpose_diagonal_desc[] = "Transpose diagonal";
 void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
 {
-    int bsize;
-
-    if (M == 32 && N == 32)
-        bsize = 8;
-
-    else if (M == 64 && N == 64)
-        bsize = 4;
+    int bsize = 8;
 
     for (int ii = 0; ii < N; ii += bsize)
     {
@@ -181,13 +169,7 @@ void transpose_diagonal(int M, int N, int A[N][M], int B[M][N])
 char transpose_block_scan_desc[] = "Transpose block scanning order";
 void transpose_block_scan(int M, int N, int A[N][M], int B[M][N])
 {
-    int bsize;
-
-    if (M == 32 && N == 32)
-        bsize = 8;
-
-    else if (M == 64 && N == 64)
-        bsize = 4;
+    int bsize = 4;
 
     for (int jj = 0; jj < M; jj += bsize)
     {
@@ -221,6 +203,199 @@ void transpose_block_scan(int M, int N, int A[N][M], int B[M][N])
 }
 
 /*
+ * Matrix transpose with special block scanning order without diagonal handling
+ */
+char transpose_64_special_order_desc[] = "Transpose with special order specific to 64 * 64";
+void transpose_64_special_order(int M, int N, int A[N][M], int B[M][N])
+{
+    int large_bsize = 8;
+    int small_bsize = 4;
+
+    for (int ii = 0; ii < N; ii += large_bsize)
+    {
+        for (int jj = 0; jj < M; jj += large_bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + small_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii; i < ii + small_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + large_bsize; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i][i] = A[i][i];
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Matrix transpose with special block scanning order without diagonal handling
+ */
+char transpose_64_special_order_desc_2[] = "Transpose with special order specific to 64 * 64 2";
+void transpose_64_special_order_2(int M, int N, int A[N][M], int B[M][N])
+{
+    int large_bsize = 8;
+    int small_bsize = 4;
+
+    for (int ii = 0; ii < N; ii += large_bsize)
+    {
+        for (int jj = 0; jj < M; jj += large_bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + small_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii; i < ii + small_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + large_bsize; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i][i] = A[i][i];
+                }
+            }
+        }
+    }
+}
+
+/*
+ * Matrix transpose with special block scanning order with diagonal handling
+ */
+char transpose_64_diagonal_desc[] = "Transpose with special order specific to 64 * 64 with diagonal handling";
+void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
+{
+    int large_bsize = 8;
+    int small_bsize = 4;
+
+    for (int ii = 0; ii < N; ii += large_bsize)
+    {
+        for (int jj = 0; jj < M; jj += large_bsize)
+        {
+            if (ii != jj)
+            {
+                for (int i = ii; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + small_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (int i = ii; i < ii + small_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                        B[j][i] = A[i][j];
+                }
+            }
+            /* Special handling diagonal blocks */
+            else
+            {
+                for (int i = ii; i < ii + small_bsize; i++)
+                {
+                    for (int j = jj; j < jj + small_bsize; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i][i] = A[i][i];
+                }
+
+                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj; j < jj + small_bsize; j++)
+                    {
+                        if (i != j + small_bsize)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i - small_bsize][i] = A[i][i - small_bsize];
+                }
+
+                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i][i] = A[i][i];
+                }
+
+                for (int i = ii; i < ii + small_bsize; i++)
+                {
+                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    {
+                        if (i != j - small_bsize)
+                            B[j][i] = A[i][j];
+                    }
+
+                    /* Special handling diagonal elements */
+                    B[i + small_bsize][i] = A[i][i + small_bsize];
+                }
+            }
+        }
+    }
+}
+
+/*
  * registerFunctions - This function registers your transpose
  *     functions with the driver.  At runtime, the driver will
  *     evaluate each of the registered functions and summarize their
@@ -235,13 +410,21 @@ void registerFunctions()
     /* Register any additional transpose functions */
     // registerTransFunction(trans, trans_desc); 
 
+    /* 32 * 32 optimization */
     // registerTransFunction(trans_no_tmp, trans_no_tmp_desc); 
 
-    registerTransFunction(transpose_no_diagonal, transpose_no_diagonal_desc);
+    // registerTransFunction(transpose_no_diagonal, transpose_no_diagonal_desc);
 
-    registerTransFunction(transpose_diagonal, transpose_diagonal_desc);
+    // registerTransFunction(transpose_diagonal, transpose_diagonal_desc);
 
+    /* 64 * 64 optimization */
     registerTransFunction(transpose_block_scan, transpose_block_scan_desc);
+
+    // Test the order scan in large block size
+    registerTransFunction(transpose_64_special_order, transpose_64_special_order_desc);
+    registerTransFunction(transpose_64_special_order_2, transpose_64_special_order_desc_2);
+
+    registerTransFunction(transpose_64_diagonal, transpose_64_diagonal_desc);
 }
 
 /* 
