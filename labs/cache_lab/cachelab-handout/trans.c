@@ -22,47 +22,132 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
-    int bsize, tmp;
+    int i, j, ii, jj, t0, t1, t2, t3;
+
     if (M == 32 && N == 32)
-        bsize = 8;
-
-    else if (M == 64 && N == 64)
-        bsize = 4;
-
-    for (int ii = 0; ii < N; ii += bsize)
     {
-        for (int jj = 0; jj < M; jj += bsize)
+        for (ii = 0; ii < N; ii += 8)
         {
-            if (ii != jj)
+            for (jj = 0; jj < M; jj += 8)
             {
-                for (int i = ii; i < ii + bsize; i++)
+                if (ii != jj)
                 {
-                    for (int j = jj; j < jj + bsize; j++)
+                    for (i = ii; i < ii + 8; i++)
                     {
-                        tmp = A[i][j];
-                        B[j][i] = tmp;
+                        for (j = jj; j < jj + 8; j++)
+                            B[j][i] = A[i][j];
                     }
                 }
-            }
-            /* Special handling diagonal blocks */
-            else
-            {
-                for (int i = ii; i < ii + bsize; i++)
+                /* Special handling diagonal blocks */
+                else
                 {
-                    for (int j = jj; j < jj + bsize; j++)
+                    for (i = ii; i < ii + 8; i++)
                     {
-                        if (i != j)
+                        for (j = jj; j < jj + 8; j++)
                         {
-                            tmp = A[i][j];
-                            B[j][i] = tmp;
+                            if (i != j)
+                                B[j][i]= A[i][j];
                         }
-                    }
 
-                    B[i][i] = A[i][i];
+                        B[i][i] = A[i][i];
+                    }
                 }
             }
         }
     }
+    else if (M == 64 && N == 64)
+    {
+
+        for (ii = 0; ii < N; ii += 8)
+        {
+            for (jj = 0; jj < M; jj += 8)
+            {
+                if (ii != jj)
+                {
+                    for (i = ii; i < ii + 4; i++)
+                    {
+                        for (j = jj; j < jj + 4; j++)
+                            B[j][i] = A[i][j];
+                    }
+    
+                    for (i = ii; i < ii + 4; i++)
+                    {
+                        for (j = jj + 4; j < jj + 8; j++)
+                            B[j - 4][i + 4] = A[i][j];
+                    }
+    
+                    for (j = 0; j < 4; j++)
+                    {
+                        t0 = B[jj + j][ii + 4];
+                        t1 = B[jj + j][ii + 5];
+                        t2 = B[jj + j][ii + 6];
+                        t3 = B[jj + j][ii + 7];
+    
+                        for (i = 4; i < 8; i++)
+                            B[jj + j][ii + i] = A[ii + i][jj + j];
+    
+                        B[jj + j + 4][ii] = t0;
+                        B[jj + j + 4][ii + 1] = t1;
+                        B[jj + j + 4][ii + 2] = t2;
+                        B[jj + j + 4][ii + 3] = t3;
+                    }
+    
+                    for (i = ii + 4; i < ii + 8; i++)
+                    {
+                        for (j = jj + 4; j < jj + 8; j++)
+                            B[j][i] = A[i][j];
+                    }
+                }
+                else
+                {
+                    for (i = ii; i < ii + 4; i++)
+                    {
+                        for (j = jj; j < jj + 4; j++)
+                        {
+                            if (i != j)
+                                B[j][i] = A[i][j];
+                        }
+    
+                        B[i][i] = A[i][i];
+                    }
+    
+                    for (i = ii + 4; i < ii + 8; i++)
+                    {
+                        for (j = jj; j < jj + 4; j++)
+                        {
+                            if (i != j + 4)
+                                B[j][i] = A[i][j];
+                        }
+    
+                        B[i - 4][i] = A[i][i - 4];
+                    }
+    
+                    for (i = ii + 4; i < ii + 8; i++)
+                    {
+                        for (j = jj + 4; j < jj + 8; j++)
+                        {
+                            if (i != j)
+                                B[j][i] = A[i][j];
+                        }
+    
+                        B[i][i] = A[i][i];
+                    }
+    
+                    for (i = ii; i < ii + 4; i++)
+                    {
+                        for (j = jj + 4; j < jj + 8; j++)
+                        {
+                            if (i != j - 4)
+                                B[j][i] = A[i][j];
+                        }
+    
+                        B[i + 4][i] = A[i][i + 4];
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 /* 
@@ -203,111 +288,6 @@ void transpose_block_scan(int M, int N, int A[N][M], int B[M][N])
 }
 
 /*
- * Matrix transpose with special block scanning order without diagonal handling
- */
-char transpose_64_special_order_desc[] = "Transpose with special order specific to 64 * 64";
-void transpose_64_special_order(int M, int N, int A[N][M], int B[M][N])
-{
-    int large_bsize = 8;
-    int small_bsize = 4;
-
-    for (int ii = 0; ii < N; ii += large_bsize)
-    {
-        for (int jj = 0; jj < M; jj += large_bsize)
-        {
-            if (ii != jj)
-            {
-                for (int i = ii; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj; j < jj + small_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-
-                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-
-                for (int i = ii; i < ii + small_bsize; i++)
-                {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-            }
-            /* Special handling diagonal blocks */
-            else
-            {
-                for (int i = ii; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj; j < jj + large_bsize; j++)
-                    {
-                        if (i != j)
-                            B[j][i] = A[i][j];
-                    }
-
-                    /* Special handling diagonal elements */
-                    B[i][i] = A[i][i];
-                }
-            }
-        }
-    }
-}
-
-/*
- * Matrix transpose with special block scanning order without diagonal handling
- */
-char transpose_64_special_order_desc_2[] = "Transpose with special order specific to 64 * 64 2";
-void transpose_64_special_order_2(int M, int N, int A[N][M], int B[M][N])
-{
-    int large_bsize = 8;
-    int small_bsize = 4;
-
-    for (int ii = 0; ii < N; ii += large_bsize)
-    {
-        for (int jj = 0; jj < M; jj += large_bsize)
-        {
-            if (ii != jj)
-            {
-                for (int i = ii; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj; j < jj + small_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-
-                for (int i = ii; i < ii + small_bsize; i++)
-                {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-
-                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
-                        B[j][i] = A[i][j];
-                }
-
-            }
-            /* Special handling diagonal blocks */
-            else
-            {
-                for (int i = ii; i < ii + large_bsize; i++)
-                {
-                    for (int j = jj; j < jj + large_bsize; j++)
-                    {
-                        if (i != j)
-                            B[j][i] = A[i][j];
-                    }
-
-                    /* Special handling diagonal elements */
-                    B[i][i] = A[i][i];
-                }
-            }
-        }
-    }
-}
-
-/*
  * Matrix transpose with special block scanning order with diagonal handling
  */
 char transpose_64_diagonal_desc[] = "Transpose with special order specific to 64 * 64 with diagonal handling";
@@ -315,6 +295,7 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
 {
     int large_bsize = 8;
     int small_bsize = 4;
+    int i, j;
 
     for (int ii = 0; ii < N; ii += large_bsize)
     {
@@ -322,30 +303,30 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
         {
             if (ii != jj)
             {
-                for (int i = ii; i < ii + large_bsize; i++)
+                for (i = ii; i < ii + large_bsize; i++)
                 {
-                    for (int j = jj; j < jj + small_bsize; j++)
+                    for (j = jj; j < jj + small_bsize; j++)
                         B[j][i] = A[i][j];
                 }
 
-                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                for (i = ii + small_bsize; i < ii + large_bsize; i++)
                 {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    for (j = jj + small_bsize; j < jj + large_bsize; j++)
                         B[j][i] = A[i][j];
                 }
 
-                for (int i = ii; i < ii + small_bsize; i++)
+                for (i = ii; i < ii + small_bsize; i++)
                 {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    for (j = jj + small_bsize; j < jj + large_bsize; j++)
                         B[j][i] = A[i][j];
                 }
             }
             /* Special handling diagonal blocks */
             else
             {
-                for (int i = ii; i < ii + small_bsize; i++)
+                for (i = ii; i < ii + small_bsize; i++)
                 {
-                    for (int j = jj; j < jj + small_bsize; j++)
+                    for (j = jj; j < jj + small_bsize; j++)
                     {
                         if (i != j)
                             B[j][i] = A[i][j];
@@ -355,9 +336,9 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
                     B[i][i] = A[i][i];
                 }
 
-                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                for (i = ii + small_bsize; i < ii + large_bsize; i++)
                 {
-                    for (int j = jj; j < jj + small_bsize; j++)
+                    for (j = jj; j < jj + small_bsize; j++)
                     {
                         if (i != j + small_bsize)
                             B[j][i] = A[i][j];
@@ -367,9 +348,9 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
                     B[i - small_bsize][i] = A[i][i - small_bsize];
                 }
 
-                for (int i = ii + small_bsize; i < ii + large_bsize; i++)
+                for (i = ii + small_bsize; i < ii + large_bsize; i++)
                 {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    for (j = jj + small_bsize; j < jj + large_bsize; j++)
                     {
                         if (i != j)
                             B[j][i] = A[i][j];
@@ -379,9 +360,9 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
                     B[i][i] = A[i][i];
                 }
 
-                for (int i = ii; i < ii + small_bsize; i++)
+                for (i = ii; i < ii + small_bsize; i++)
                 {
-                    for (int j = jj + small_bsize; j < jj + large_bsize; j++)
+                    for (j = jj + small_bsize; j < jj + large_bsize; j++)
                     {
                         if (i != j - small_bsize)
                             B[j][i] = A[i][j];
@@ -395,6 +376,100 @@ void transpose_64_diagonal(int M, int N, int A[N][M], int B[M][N])
     }
 }
 
+char transpose_64_desc[] = "Transpose 64 * 64";
+void transpose_64(int M, int N, int A[N][M], int B[M][N])
+{
+    int i, j, ii, jj, t0, t1, t2, t3;
+
+    for (ii = 0; ii < N; ii += 8)
+    {
+        for (jj = 0; jj < M; jj += 8)
+        {
+            if (ii != jj)
+            {
+                for (i = ii; i < ii + 4; i++)
+                {
+                    for (j = jj; j < jj + 4; j++)
+                        B[j][i] = A[i][j];
+                }
+
+                for (i = ii; i < ii + 4; i++)
+                {
+                    for (j = jj + 4; j < jj + 8; j++)
+                        B[j - 4][i + 4] = A[i][j];
+                }
+
+                for (j = 0; j < 4; j++)
+                {
+                    t0 = B[jj + j][ii + 4];
+                    t1 = B[jj + j][ii + 5];
+                    t2 = B[jj + j][ii + 6];
+                    t3 = B[jj + j][ii + 7];
+
+                    for (i = 4; i < 8; i++)
+                        B[jj + j][ii + i] = A[ii + i][jj + j];
+
+                    B[jj + j + 4][ii] = t0;
+                    B[jj + j + 4][ii + 1] = t1;
+                    B[jj + j + 4][ii + 2] = t2;
+                    B[jj + j + 4][ii + 3] = t3;
+                }
+
+                for (i = ii + 4; i < ii + 8; i++)
+                {
+                    for (j = jj + 4; j < jj + 8; j++)
+                        B[j][i] = A[i][j];
+                }
+            }
+            else
+            {
+                for (i = ii; i < ii + 4; i++)
+                {
+                    for (j = jj; j < jj + 4; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    B[i][i] = A[i][i];
+                }
+
+                for (i = ii + 4; i < ii + 8; i++)
+                {
+                    for (j = jj; j < jj + 4; j++)
+                    {
+                        if (i != j + 4)
+                            B[j][i] = A[i][j];
+                    }
+
+                    B[i - 4][i] = A[i][i - 4];
+                }
+
+                for (i = ii + 4; i < ii + 8; i++)
+                {
+                    for (j = jj + 4; j < jj + 8; j++)
+                    {
+                        if (i != j)
+                            B[j][i] = A[i][j];
+                    }
+
+                    B[i][i] = A[i][i];
+                }
+
+                for (i = ii; i < ii + 4; i++)
+                {
+                    for (j = jj + 4; j < jj + 8; j++)
+                    {
+                        if (i != j - 4)
+                            B[j][i] = A[i][j];
+                    }
+
+                    B[i + 4][i] = A[i][i + 4];
+                }
+            }
+        }
+    }
+}
 /*
  * registerFunctions - This function registers your transpose
  *     functions with the driver.  At runtime, the driver will
@@ -418,13 +493,9 @@ void registerFunctions()
     // registerTransFunction(transpose_diagonal, transpose_diagonal_desc);
 
     /* 64 * 64 optimization */
-    registerTransFunction(transpose_block_scan, transpose_block_scan_desc);
-
-    // Test the order scan in large block size
-    registerTransFunction(transpose_64_special_order, transpose_64_special_order_desc);
-    registerTransFunction(transpose_64_special_order_2, transpose_64_special_order_desc_2);
-
-    registerTransFunction(transpose_64_diagonal, transpose_64_diagonal_desc);
+    // registerTransFunction(transpose_block_scan, transpose_block_scan_desc);
+    // registerTransFunction(transpose_64_diagonal, transpose_64_diagonal_desc);
+    // registerTransFunction(transpose_64, transpose_64_desc);
 }
 
 /* 

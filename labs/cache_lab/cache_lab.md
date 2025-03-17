@@ -73,7 +73,7 @@
     - Because the least three significant bits are the same, each row of `A` will have conflict miss with the corresponding row of `B`
 
 #### M = 32, N = 32
-- Every 8 rows of `B` will cause one conflict miss
+- Every 8 rows of `B` will cause one cache conflict
     - Each time, we access the new row of `B`, the address increase `0x80`
         - $32 \times 4 = 2^7$ bytes
 
@@ -148,4 +148,22 @@
 
     ```
 #### M = 64, N = 64
+- Every 4 rows will cause one cache conflict
+
+    ![](./images/64.png)
+    - A1 transposes to B1
+    - When A2 transposes to B2, B2 will have conflicts with B1
+
+- The following methods will elimiate the cache conflict
+
+    Index|Operation | Cache
+    -|-|-
+    1|A1 -> B1 | A1, A2, B1, B3
+    2|A2 -> B3 (not B2)|
+    3|Save B3 row 0 to local variable
+    4|Get A3 column 0 to replace B3 row 0|A3, A4, B1, B3
+    5|Save B3 row 0 local variable to B2 row 0|A3, A4, (B2, B4 row 0), (B1, B3 row 1-3) 
+    6|Repeat operation 3-5|A3, A4, B2, B4
+    7|A4 -> B4
+
 #### M = 61, N = 67
