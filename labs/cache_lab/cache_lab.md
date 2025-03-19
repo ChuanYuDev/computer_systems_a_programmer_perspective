@@ -154,7 +154,7 @@
     - A1 transposes to B1
     - When A2 transposes to B2, B2 will have conflicts with B1
 
-- The following methods will elimiate the cache conflict
+- We use the following method to completely elimiate the cache conflict when we tranpose non-diagonal block
 
     Index|Operation | Cache
     -|-|-
@@ -166,4 +166,19 @@
     6|Repeat operation 3-5|A3, A4, B2, B4
     7|A4 -> B4
 
+- For diagonal $8 \times 8$ block, we split it into 4 $4 \times 4$ small block and tranpose them in column-major order
+
+    ![](./images/64_diagonal.png)
+    - This method is not fully optimized 
+
+- The final result
+
+    ```
+    ./test-trans -M 64 -N 64
+
+    Function 0 (2 total)
+    Step 1: Validating and generating memory traces
+    Step 2: Evaluating performance (s=5, E=1, b=5)
+    func 0 (Transpose submission): hits:8785, misses:1204, evictions:1172
+    ```
 #### M = 61, N = 67
