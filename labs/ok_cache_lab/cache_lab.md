@@ -3,6 +3,12 @@
 - [Introduction](#introduction)
 - [Duration](#duration)
 - [Chapter](#chapter)
+- [Solution](#solution)
+    - [Part A](#part-a)
+    - [Part B](#part-b)
+        - [M = 32, N = 32](#m--32-n--32)
+        - [M = 64, N = 64](#m--64-n--64)
+        - [M = 61, N = 67](#m--61-n--67)
 
 ## Introduction
 - At CMU we use this lab in place of the Performance Lab
@@ -19,7 +25,7 @@
 ## Chapter
 - Chapter 6: The Memory Hierarchy
 
-## Solution:
+## Solution
 
 ### Part A
 - Overview of the simulated cache structure
@@ -147,6 +153,7 @@
     TEST_TRANS_RESULTS=1:288
 
     ```
+
 #### M = 64, N = 64
 - Every 4 rows will cause one cache conflict
 
@@ -181,5 +188,6 @@
     Step 2: Evaluating performance (s=5, E=1, b=5)
     func 0 (Transpose submission): hits:8785, misses:1204, evictions:1172
     ```
+
 #### M = 61, N = 67
 - We only hit 2133 misses, to be done

@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <string.h>
 #include "cachelab.h"
+
+#define MAX_FILENAME_LENGTH 100
 
 static int num_set_bit, num_cache_line, num_block_bit, verbose;
 static int hit_count, miss_count, eviction_count;
@@ -177,7 +180,7 @@ int main(int argc, char *argv[])
 {
     /* Parse the arguments */
     int opt;
-    char *filename = NULL;
+    char filename[MAX_FILENAME_LENGTH];
 
     while ((opt = getopt(argc, argv, "vs:E:b:t:")) != -1)
     {
@@ -200,7 +203,8 @@ int main(int argc, char *argv[])
                 break;
             
             case 't':
-                filename = optarg;
+                strncpy(filename, optarg, MAX_FILENAME_LENGTH);
+                
                 break;
 
             default: /* '?' */
