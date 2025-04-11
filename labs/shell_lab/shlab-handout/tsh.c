@@ -42,7 +42,6 @@ char prompt[] = "tsh> ";    /* command line prompt (DO NOT CHANGE) */
 int verbose = 0;            /* if true, print additional output */
 int nextjid = 1;            /* next job ID to allocate */
 char sbuf[MAXLINE];         /* for composing sprintf messages */
-volatile sig_atomic_t global_pid;
 
 struct job_t {              /* The job struct */
     pid_t pid;              /* job PID */
@@ -92,8 +91,11 @@ pid_t Fork(void);
 int Execve(const char *filename, char * const argv[], char * const envp[]);
 int Sigprocmask(int how, const sigset_t *set, sigset_t *old_set);
 int Sigemptyset(sigset_t *set);
+int Sigfillset(sigset_t *set);
 int Sigaddset(sigset_t *set, int signum);
 pid_t Waitpid(pid_t pid, int *statusp, int options);
+int Setpgid(pid_t pid, pid_t pgid);
+int Kill(pid_t pid, int sig);
 
 /*
  * main - The shell's main routine 
@@ -185,7 +187,13 @@ void eval(char *cmdline)
 {
     char *argv[MAXARGS];
     int bg; /* Should the job run in bg or fg? */
+    int state; /* job state */
     pid_t pid;
+    sigset_t mask_all, mask_one, prev_one;
+
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
 
     bg = parseline(cmdline, argv);
 
@@ -194,19 +202,28 @@ void eval(char *cmdline)
 
     if (!builtin_cmd(argv))
     {
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_one); /* Block SIGCHLD */
+
         if ((pid = Fork()) == 0)
         {
-            /* Create unique process group */
+            Setpgid(0, 0); /* Create unique process group */
+            Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* Unblock SIGCHLD*/
 
             Execve(argv[0], argv, environ);
         }
+
+        Sigprocmask(SIG_BLOCK, &mask_all, NULL); /* Block all the signals */
+
+        state = bg ? BG : FG;
+        addjob(jobs, pid, state, cmdline);
+
+        Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* Unblock SIGCHLD */
 
         /* Wait for foreground job to terminate */
         if (!bg)
         {
             waitfg(pid);
         }
-
     }
 
     return;
@@ -289,11 +306,22 @@ int parseline(const char *cmdline, char **argv)
 int builtin_cmd(char **argv) 
 {
     char *cmd = argv[0];
+    sigset_t mask_all, prev_all;
+
+    Sigfillset(&mask_all);
 
     if (!strcmp(cmd, "quit"))
     {
         exit(0);
     }
+
+    if (!strcmp(cmd, "jobs"))
+    {
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all); /* Block all the signals */
+        listjobs(jobs);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL); /* Unblock all the signals */
+    }
+
     return 0;     /* not a builtin command */
 }
 
@@ -312,17 +340,15 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-    sigset_t mask, prev;
-    Sigemptyset(&mask);
-    Sigaddset(&mask, SIGCHLD);
+    sigset_t mask_all, prev_all;
+    Sigfillset(&mask_all);
 
-    Sigprocmask(SIG_BLOCK, &mask, &prev); /* Block SIGCHLD */
-    global_pid = 0;
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all); /* Block all the signals to access jobs */
 
-    while(global_pid != pid)
-        sigsuspend(&prev);
+    while(fgpid(jobs))
+        sigsuspend(&prev_all);
     
-    Sigprocmask(SIG_SETMASK, &prev, NULL);
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL); /* Unblock SIGCHLD*/
 
     return;
 }
@@ -340,6 +366,27 @@ void waitfg(pid_t pid)
  */
 void sigchld_handler(int sig) 
 {
+    int olderrno = errno;
+    sigset_t mask_all, prev_all;
+    pid_t pid;
+    int jid;
+    int status;
+
+    Sigfillset(&mask_all);
+
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+    {
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+        jid = pid2jid(pid);
+        deletejob(jobs, pid);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
+        if (WIFSIGNALED(status))
+            /* TO DO: format refered to tshref*/
+            fprintf(stdout, "%d, %d", jid, WTERMSIG(status));
+    }
+
+    errno = olderrno;
     return;
 }
 
@@ -658,6 +705,16 @@ int Sigemptyset(sigset_t *set)
     return rc;
 }
 
+int Sigfillset(sigset_t *set)
+{
+    int rc;
+
+    if ((rc = sigfillset(set)) < 0)
+        unix_error("sigfillset error");
+    
+    return rc;
+}
+
 int Sigaddset(sigset_t *set, int signum)
 {
     int rc;
@@ -676,6 +733,16 @@ pid_t Waitpid(pid_t pid, int *statusp, int options)
         unix_error("waitpid error");
     
     return return_pid;
+}
+
+int Setpgid(pid_t pid, pid_t pgid)
+{
+    int rc;
+
+    if ((rc = setpgid(pid, pgid)) < 0)
+        unix_error("setpgid error");
+    
+    return rc;
 }
 
 int Kill(pid_t pid, int sig)

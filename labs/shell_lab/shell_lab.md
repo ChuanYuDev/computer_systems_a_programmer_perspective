@@ -7,7 +7,7 @@
 - [Solution](#solution)
     - [Trace01](#trace01)
     - [Trace02](#trace02)
-    - [Trace03]
+    - [Trace03](#trace03)
     - [Trace04]
     - [Trace05]
     - [Trace06]
@@ -73,10 +73,54 @@
             - `waitfg`
 
 - `waitfg`
-    ```c
-    while(global_pid != pid)
-        sigsuspend to wait for the signal 
-    ```
+
+    - Block all the signals because we need to access the shared global data structure `jobs`
+
+    - Use `fgpid` to check whether the current foreground job exists instead of using PID
+
+        ```c
+        while(fgpid(jobs))
+            sigsuspend to unblock SIGCHLD and wait for the signal 
+        ```
+
+    - Unblock all the signals
+
+- `eval(char *cmdline)`
+    - **How to deal with the mask?**
+    - Parse the command line 
+        - Build `argv`
+            - Check the arguments number
+
+        - The last element of `argv` is `NULL`
+        - If background job, return 1 
+        - Otherwise, return 0
+    
+    - Skip the blank line
+        - If the first element of `argv` is `NULL`, return immediately
+    
+    - If the command is builtin
+        - `quit` 
+            - Exit the program (`trace02.txt`)
+        
+        - `jobs`
+            - `listjobs`
+
+        - `bg` or `fg` 
+            - `do_bgfg`
+
+    - If the command is not builtin
+        - Block `SIGCHLD` signal
+        - Fork a child process
+            - Create unique process group
+            - Unblock `SIGCHLD` signal
+            - Execute the executable in the context of the child
+        
+        - Block all the signals
+        - Add jobs
+        - Unblock `SIGCHLD` signal
+
+        - If foreground job (`trace03.txt`)
+            - `waitfg`
 
 - `Waitpid`
     - **Because `Waitpid` will be revoked in the signal handler, is it safe to use `fprintf` in `unix_error`?**
@@ -90,9 +134,8 @@
         - Delete jobs
         - Unblock all the signals
 
-        - If `WISIGNALED(status)`
-            - Function:
-                - Print a message with the job's PID and a description of the offending signal (`WTERMSIG(status)`)
+        - If `WIFSIGNALED(status)`
+            - **Print a message with the job's PID and a description of the offending signal (`WTERMSIG(status)`)?**
 
     - Restore `errno`
 
@@ -126,62 +169,16 @@
     - For the driver program
     - For the builin command `quit`, exit the program directly
 
-### Pseudo code
-- Initialize jobs
+- `main`
+    - Initialize jobs
 
-- `while(1)`
-    - Read the command line from `stdin`
-    - If `EOF` is received, terminate the program (`trace01.txt`)
+    - `while(1)`
+        - Read the command line from `stdin`
+        - If `EOF` is received, terminate the program (`trace01.txt`)
 
-    - Evaluate the command line
-        - **How to deal with the mask?**
-        - Parse the command line 
-            - Build `argv`
-                - Check the arguments number
-
-            - The last element of `argv` is `NULL`
-            - If background job, return 1 
-            - Otherwise, return 0
-        
-        - Skip the blank line
-            - If the first element of `argv` is `NULL`, return immediately
-        
-        - If the command is builtin
-            - `quit` 
-                - Exit the program (`trace02.txt`)
-            
-            - `jobs`
-                - `listjobs`
-
-            - `bg` or `fg` 
-                - `do_bgfg`
-
-        - If the command is not builtin
-            - Block `SIGCHLD` signal
-            - Fork a child process
-                - Unblock `SIGCHLD` signal
-                - Execute the executable in the context of the child
-            
-            - Block all the signals
-            - Add jobs
-
-            - Assign `pid` to 0
-
-            - If foreground job (`trace03.txt`)
-                - `waitfg`
-
-            - Unblock `SIGCHLD` signal
+        - `eval(char *cmdline)`
 
 ### Trace01
-- The `tsh.c` already implements the function of terminating properly on EOF
-
-    ```c
-    if (feof(stdin)) { /* End of file (ctrl-d) */
-        fflush(stdout);
-        exit(0);
-    }
-    ```
-
 - Result
 
     ```
@@ -199,20 +196,8 @@
     # trace01.txt - Properly terminate on EOF.
     #
     ```
+
 ### Trace02
-- If command (`argv[0]`) is `"quit"`, exit program immediately 
-
-- Implement `quit` builtin command
-
-    ```c
-    char *cmd = argv[0];
-
-    if (!strcmp(cmd, "quit"))
-    {
-        exit(0);
-    }
-    ```
-
 - Result:
 
     ```
@@ -231,29 +216,6 @@
     #
     ```
 ### Trace03
-- Fork a child process and execute the program in the context of the child process
-
-    ```c
-    if (!builtin_cmd(argv))
-    {
-        if ((pid = Fork()) == 0)
-        {
-            /* Create unique process group */
-
-            Execve(argv[0], argv, environ);
-        }
-
-        /* Wait for foreground job to terminate */
-        if (!bg)
-        {
-            waitfg(pid);
-        }
-
-    }
-
-    ```
-    - If the command is foreground job, wait the process until it is terminated
-
 - Result
 
     ```
