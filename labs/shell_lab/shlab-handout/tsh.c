@@ -188,6 +188,7 @@ void eval(char *cmdline)
     char *argv[MAXARGS];
     int bg; /* Should the job run in bg or fg? */
     int state; /* job state */
+    int jid; /* job id */
     pid_t pid;
     sigset_t mask_all, mask_one, prev_one;
 
@@ -216,14 +217,18 @@ void eval(char *cmdline)
 
         state = bg ? BG : FG;
         addjob(jobs, pid, state, cmdline);
+        jid = pid2jid(pid);
+
+        /* TO DO: How to handle add too many jobs? Refer to tshref */
 
         Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* Unblock SIGCHLD */
 
-        /* Wait for foreground job to terminate */
         if (!bg)
         {
-            waitfg(pid);
+            waitfg(pid); /* Wait for foreground job to terminate */
         }
+        else
+            fprintf(stdout, "[%d] (%d) %s", jid, pid, cmdline);
     }
 
     return;
@@ -320,6 +325,15 @@ int builtin_cmd(char **argv)
         Sigprocmask(SIG_BLOCK, &mask_all, &prev_all); /* Block all the signals */
         listjobs(jobs);
         Sigprocmask(SIG_SETMASK, &prev_all, NULL); /* Unblock all the signals */
+        
+        return 1;
+    }
+
+    if (!strcmp(cmd, "fg") || !strcmp(cmd, "bf"))
+    {
+        do_bgfg(argv);
+
+        return 1;
     }
 
     return 0;     /* not a builtin command */
@@ -332,6 +346,42 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+    char *buf = argv[1];
+    struct job_t *job_ptr;
+    int jid;
+    pid_t pid;
+    sigset_t mask_all, prev_all;
+
+    Sigfillset(&mask_all);
+
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
+    if (*buf == '%')
+    {
+        buf++;
+        jid = atoi(buf);
+        job_ptr = getjobjid(jobs, jid);
+    }
+    else
+    {
+        pid = atoi(buf);
+        job_ptr = getjobpid(jobs, pid);
+    }
+
+    if (job_ptr)
+    {
+        pid = job_ptr->pid;
+        Kill(-pid, SIGCONT);
+
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
+        if (strcmp(argv[0], "fg"))
+            waitfg(pid);
+    }
+    else
+    {
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+    }
     return;
 }
 
@@ -397,7 +447,22 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
-    // pid_t pid = fgpid(jobs);
+    int olderrno = errno;
+    sigset_t mask_all, prev_all;
+    pid_t pid;
+
+    Sigfillset(&mask_all);
+
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
+    pid = fgpid(jobs);
+
+    if (pid > 0)
+        Kill(-pid, SIGINT);
+
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
+    errno = olderrno;
     return;
 }
 
@@ -408,6 +473,22 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+    int olderrno = errno;
+    sigset_t mask_all, prev_all;
+    pid_t pid;
+
+    Sigfillset(&mask_all);
+
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
+    pid = fgpid(jobs);
+
+    if (pid > 0)
+        Kill(-pid, SIGTSTP);
+
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
+    errno = olderrno;
     return;
 }
 

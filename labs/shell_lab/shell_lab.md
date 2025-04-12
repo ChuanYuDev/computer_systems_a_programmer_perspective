@@ -46,6 +46,59 @@
 
 
 ### Function
+- `main`
+    - Initialize jobs
+
+    - `while(1)`
+        - Read the command line from `stdin`
+        - If `EOF` is received, terminate the program (`trace01.txt`)
+
+        - `eval(char *cmdline)`
+
+- `eval(char *cmdline)`
+    - `parseline`
+
+    - Skip the blank line
+        - If the first element of `argv` is `NULL`, return immediately
+    
+    - If the command is builtin
+        - `quit` 
+            - Exit the program (`trace02.txt`)
+        
+        - `jobs`
+            - `listjobs`
+
+        - `bg` or `fg` 
+            - `do_bgfg`
+
+    - If the command is not builtin
+        - Block `SIGCHLD` signal
+        - Fork a child process
+            - Create unique process group
+            - Unblock `SIGCHLD` signal
+            - Execute the executable in the context of the child
+        
+        - Block all the signals
+        - Add jobs
+        - Get jid
+
+        - **If add too many jobs, how to handle?**
+        - Unblock `SIGCHLD` signal
+
+        - If foreground job (`trace03.txt`)
+            - `waitfg`
+        
+        - else
+            - print background job information
+
+- `parseline`
+    - Build `argv`
+        - Check the arguments number
+
+    - The last element of `argv` is `NULL`
+    - If background job, return 1 
+    - Otherwise, return 0
+
 - `do_bgfg`
     - Get job
         ```c
@@ -84,46 +137,6 @@
         ```
 
     - Unblock all the signals
-
-- `eval(char *cmdline)`
-    - **How to deal with the mask?**
-    - Parse the command line 
-        - Build `argv`
-            - Check the arguments number
-
-        - The last element of `argv` is `NULL`
-        - If background job, return 1 
-        - Otherwise, return 0
-    
-    - Skip the blank line
-        - If the first element of `argv` is `NULL`, return immediately
-    
-    - If the command is builtin
-        - `quit` 
-            - Exit the program (`trace02.txt`)
-        
-        - `jobs`
-            - `listjobs`
-
-        - `bg` or `fg` 
-            - `do_bgfg`
-
-    - If the command is not builtin
-        - Block `SIGCHLD` signal
-        - Fork a child process
-            - Create unique process group
-            - Unblock `SIGCHLD` signal
-            - Execute the executable in the context of the child
-        
-        - Block all the signals
-        - Add jobs
-        - Unblock `SIGCHLD` signal
-
-        - If foreground job (`trace03.txt`)
-            - `waitfg`
-
-- `Waitpid`
-    - **Because `Waitpid` will be revoked in the signal handler, is it safe to use `fprintf` in `unix_error`?**
 
 - `sigchld_handler`
     - Save `errno`
@@ -169,14 +182,8 @@
     - For the driver program
     - For the builin command `quit`, exit the program directly
 
-- `main`
-    - Initialize jobs
-
-    - `while(1)`
-        - Read the command line from `stdin`
-        - If `EOF` is received, terminate the program (`trace01.txt`)
-
-        - `eval(char *cmdline)`
+- `Waitpid`
+    - **Because `Waitpid` will be revoked in the signal handler, is it safe to use `fprintf` in `unix_error`?**
 
 ### Trace01
 - Result
@@ -236,7 +243,28 @@
     tsh> quit
     ```
 
-### Trace04
+### Trace04  
+- Result:
+    ```
+    make test04
+    ./sdriver.pl -t trace04.txt -s ./tsh -a "-p"
+    #
+    # trace04.txt - Run a background job.
+    #
+    tsh> ./myspin 1 &
+    [1] (881077) ./myspin 1 &
+    ```
+
+    ```
+    make rtest04
+    ./sdriver.pl -t trace04.txt -s ./tshref -a "-p"
+    #
+    # trace04.txt - Run a background job.
+    #
+    tsh> ./myspin 1 &
+    [1] (881037) ./myspin 1 &
+    ```
+
 ### Trace05
 ### Trace06
 ### Trace07
