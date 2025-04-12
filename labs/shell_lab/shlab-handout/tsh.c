@@ -93,7 +93,7 @@ int Sigprocmask(int how, const sigset_t *set, sigset_t *old_set);
 int Sigemptyset(sigset_t *set);
 int Sigfillset(sigset_t *set);
 int Sigaddset(sigset_t *set, int signum);
-pid_t Waitpid(pid_t pid, int *statusp, int options);
+// pid_t Waitpid(pid_t pid, int *statusp, int options);
 int Setpgid(pid_t pid, pid_t pgid);
 int Kill(pid_t pid, int sig);
 
@@ -341,8 +341,14 @@ int builtin_cmd(char **argv)
 
 /* 
  * do_bgfg - Execute the builtin bg and fg commands
- * bg: Change a stopped background job <job> to a running background job
- * fg: Change a stopped or running background job <job> to a running in the foreground
+ *
+ * bg:
+ * Change a stopped background job <job> to a running background job
+ * Job state ST -> BG 
+ * 
+ * fg:
+ * Change a stopped or running background job <job> to a running in the foreground
+ * Job state ST -> FG or BG -> FG
  */
 void do_bgfg(char **argv) 
 {
@@ -376,7 +382,16 @@ void do_bgfg(char **argv)
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
         if (strcmp(argv[0], "fg"))
+        {
+            job_ptr->state = FG;
             waitfg(pid);
+        }
+        else if (strcmp(argv[0], "bg"))
+        {
+            job_ptr->state = BG;
+        }
+        else
+            app_error("do_bgfg command not supported");
     }
     else
     {
@@ -419,22 +434,42 @@ void sigchld_handler(int sig)
     int olderrno = errno;
     sigset_t mask_all, prev_all;
     pid_t pid;
-    int jid;
     int status;
+    struct job_t *job_ptr;
+    int jid;
 
     Sigfillset(&mask_all);
 
-    while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
+    while ((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0)
     {
         Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
 
-        jid = pid2jid(pid);
-        deletejob(jobs, pid);
+        job_ptr = getjobpid(jobs, pid);
+        jid = job_ptr->jid;
+
+        if (WIFEXITED(status))
+        {
+            // fprintf(stdout, "job [%d] (%d) exit code %d\n", jid, pid, WEXITSTATUS(status));
+
+            deletejob(jobs, pid);
+        }
+        else if (WIFSIGNALED(status))
+        {
+            fprintf(stdout, "job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
+
+            deletejob(jobs, pid);
+        }
+        else if (WIFSTOPPED(status))
+        {
+            fprintf(stdout, "job [%d] (%d) stopped by signal %d\n", jid, pid, WSTOPSIG(status));
+
+            job_ptr->state = ST;
+        }
+        else
+            app_error("sigchld_handler error status not supported");
 
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
-        if (WIFSIGNALED(status))
-            fprintf(stdout, "job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
     }
 
     errno = olderrno;
@@ -807,15 +842,15 @@ int Sigaddset(sigset_t *set, int signum)
     return rc;
 }
 
-pid_t Waitpid(pid_t pid, int *statusp, int options)
-{
-    pid_t return_pid;
+// pid_t Waitpid(pid_t pid, int *statusp, int options)
+// {
+//     pid_t return_pid;
 
-    if ((return_pid = waitpid(pid, statusp, options)) < 0)
-        unix_error("waitpid error");
+//     if ((return_pid = waitpid(pid, statusp, options)) < 0)
+//         unix_error("waitpid error");
     
-    return return_pid;
-}
+//     return return_pid;
+// }
 
 int Setpgid(pid_t pid, pid_t pgid)
 {
@@ -832,7 +867,11 @@ int Kill(pid_t pid, int sig)
     int rc;
 
     if ((rc = kill(pid, sig)) < 0)
-        unix_error("kill error");
+    {
+        fprintf(stdout, "kill error: %s, pid: %d, sig: %d\n", strerror(errno), pid, sig);
+
+        exit(1);
+    }
     
     return rc;
 }
