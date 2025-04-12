@@ -427,13 +427,14 @@ void sigchld_handler(int sig)
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0)
     {
         Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
         jid = pid2jid(pid);
         deletejob(jobs, pid);
+
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
         if (WIFSIGNALED(status))
-            /* TO DO: format refered to tshref*/
-            fprintf(stdout, "%d, %d", jid, WTERMSIG(status));
+            fprintf(stdout, "job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
     }
 
     errno = olderrno;

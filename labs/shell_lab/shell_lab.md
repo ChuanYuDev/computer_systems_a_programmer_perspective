@@ -8,8 +8,8 @@
     - [Trace01](#trace01)
     - [Trace02](#trace02)
     - [Trace03](#trace03)
-    - [Trace04]
-    - [Trace05]
+    - [Trace04](#trace04)
+    - [Trace05](#trace05)
     - [Trace06]
     - [Trace07]
     ### Trace08
@@ -187,6 +187,13 @@
 
 ### Trace01
 - Result
+    ```
+    make rtest01
+    ./sdriver.pl -t trace01.txt -s ./tshref -a "-p"
+    #
+    # trace01.txt - Properly terminate on EOF.
+    #
+    ```
 
     ```
     make test01
@@ -196,16 +203,15 @@
     #
     ```
 
-    ```
-    make rtest01
-    ./sdriver.pl -t trace01.txt -s ./tshref -a "-p"
-    #
-    # trace01.txt - Properly terminate on EOF.
-    #
-    ```
-
 ### Trace02
 - Result:
+    ```
+    make rtest02
+    ./sdriver.pl -t trace02.txt -s ./tshref -a "-p"
+    #
+    # trace02.txt - Process builtin quit command.
+    #
+    ```
 
     ```
     make test02
@@ -215,15 +221,16 @@
     #
     ```
 
-    ```
-    make rtest02
-    ./sdriver.pl -t trace02.txt -s ./tshref -a "-p"
-    #
-    # trace02.txt - Process builtin quit command.
-    #
-    ```
 ### Trace03
 - Result
+    ```
+    make rtest03
+    ./sdriver.pl -t trace03.txt -s ./tshref -a "-p"
+    #
+    # trace03.txt - Run a foreground job.
+    #
+    tsh> quit
+    ```
 
     ```
     make test03
@@ -234,27 +241,8 @@
     tsh> quit
     ```
 
-    ```
-    make rtest03
-    ./sdriver.pl -t trace03.txt -s ./tshref -a "-p"
-    #
-    # trace03.txt - Run a foreground job.
-    #
-    tsh> quit
-    ```
-
 ### Trace04  
 - Result:
-    ```
-    make test04
-    ./sdriver.pl -t trace04.txt -s ./tsh -a "-p"
-    #
-    # trace04.txt - Run a background job.
-    #
-    tsh> ./myspin 1 &
-    [1] (881077) ./myspin 1 &
-    ```
-
     ```
     make rtest04
     ./sdriver.pl -t trace04.txt -s ./tshref -a "-p"
@@ -265,8 +253,69 @@
     [1] (881037) ./myspin 1 &
     ```
 
+    ```
+    make test04
+    ./sdriver.pl -t trace04.txt -s ./tsh -a "-p"
+    #
+    # trace04.txt - Run a background job.
+    #
+    tsh> ./myspin 1 &
+    [1] (881077) ./myspin 1 &
+    ```
+
 ### Trace05
+- Result:
+    ```
+    make rtest05
+    ./sdriver.pl -t trace05.txt -s ./tshref -a "-p"
+    #
+    # trace05.txt - Process jobs builtin command.
+    #
+    tsh> ./myspin 2 &
+    [1] (881420) ./myspin 2 &
+    tsh> ./myspin 3 &
+    [2] (881422) ./myspin 3 &
+    tsh> jobs
+    [1] (881420) Running ./myspin 2 &
+    [2] (881422) Running ./myspin 3 &
+    ```
+
+    ```
+    make test05
+    ./sdriver.pl -t trace05.txt -s ./tsh -a "-p"
+    #
+    # trace05.txt - Process jobs builtin command.
+    #
+    tsh> ./myspin 2 &
+    [1] (881476) ./myspin 2 &
+    tsh> ./myspin 3 &
+    [2] (881478) ./myspin 3 &
+    tsh> jobs
+    [1] (881476) Running ./myspin 2 &
+    [2] (881478) Running ./myspin 3 &
+    ```
+
 ### Trace06
+- Result:
+    ```
+    make rtest06
+    ./sdriver.pl -t trace06.txt -s ./tshref -a "-p"
+    #
+    # trace06.txt - Forward SIGINT to foreground job.
+    #
+    tsh> ./myspin 4
+    Job [1] (881796) terminated by signal 2
+    ```
+
+    ```
+    make test06
+    ./sdriver.pl -t trace06.txt -s ./tsh -a "-p"
+    #
+    # trace06.txt - Forward SIGINT to foreground job.
+    #
+    tsh> ./myspin 4
+    job [1] (882461) terminated by signal 2
+    ```
 ### Trace07
 ### Trace08
 ### Trace09
