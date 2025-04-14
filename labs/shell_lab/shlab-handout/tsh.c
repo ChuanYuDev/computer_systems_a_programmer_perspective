@@ -360,38 +360,65 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+    char *cmd = argv[0];
     char *buf = argv[1];
+    char *endptr;
     struct job_t *job_ptr;
-    int jid;
-    pid_t pid;
+    int jid = 0;
+    pid_t pid = 0;
     sigset_t mask_all, prev_all;
 
     Sigfillset(&mask_all);
 
-    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+    /* trace14 */
+    if (!buf)
+    {
+        fprintf(stdout, "%s command requires PID or %%jobid argument\n", cmd);
 
-    if (*buf == '%')
+        return;
+    }
+
+    int isjid = (*buf == '%');
+
+    if (isjid)
     {
         buf++;
-        jid = atoi(buf);
-        job_ptr = getjobjid(jobs, jid);
+        jid = strtol(buf, &endptr, 10);
     }
     else
+        pid = strtol(buf, &endptr, 10);
+
+    /* trace14 */
+    if (buf == endptr)
     {
-        pid = atoi(buf);
-        job_ptr = getjobpid(jobs, pid);
+        fprintf(stdout, "%s: argument must be a PID or %%jobid\n", cmd);
+
+        return;
     }
 
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
+    if (isjid)
+        job_ptr = getjobjid(jobs, jid);
+    else
+        job_ptr = getjobpid(jobs, pid);
+
+    /* trace14 */
     if (!job_ptr)
     {
+        if (isjid)
+            fprintf(stdout, "%%%s: No such job\n", buf);
+        else
+            fprintf(stdout, "(%s): No such process\n", buf);
+
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
         return;
     }
 
     pid = job_ptr->pid;
-    Kill(-pid, SIGCONT);
+    Kill(-pid, SIGCONT); /* trace13 */
 
-    if (!strcmp(argv[0], "fg"))
+    if (!strcmp(cmd, "fg"))
     {
         job_ptr->state = FG;
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
@@ -400,7 +427,7 @@ void do_bgfg(char **argv)
         return;
     }
 
-    if (!strcmp(argv[0], "bg"))
+    if (!strcmp(cmd, "bg"))
     {
         job_ptr->state = BG;
         fprintf(stdout, "[%d] (%d) %s", job_ptr->jid, pid, job_ptr->cmdline);
@@ -464,19 +491,18 @@ void sigchld_handler(int sig)
 
         if (WIFEXITED(status))
         {
-            // fprintf(stdout, "job [%d] (%d) exit code %d\n", jid, pid, WEXITSTATUS(status));
-
+            // fprintf(stdout, "Job [%d] (%d) exit code %d\n", jid, pid, WEXITSTATUS(status));
             deletejob(jobs, pid);
         }
         else if (WIFSIGNALED(status))
         {
-            fprintf(stdout, "job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
+            fprintf(stdout, "Job [%d] (%d) terminated by signal %d\n", jid, pid, WTERMSIG(status));
 
             deletejob(jobs, pid);
         }
         else if (WIFSTOPPED(status))
         {
-            fprintf(stdout, "job [%d] (%d) stopped by signal %d\n", jid, pid, WSTOPSIG(status));
+            fprintf(stdout, "Job [%d] (%d) stopped by signal %d\n", jid, pid, WSTOPSIG(status));
 
             job_ptr->state = ST;
         }
@@ -533,7 +559,7 @@ void sigtstp_handler(int sig)
     pid = fgpid(jobs);
 
     if (pid > 0)
-        Kill(-pid, SIGTSTP);
+        Kill(-pid, SIGTSTP); /* trace12 */
 
     Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
