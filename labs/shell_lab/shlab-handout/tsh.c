@@ -305,8 +305,7 @@ int parseline(const char *cmdline, char **argv)
 }
 
 /* 
- * builtin_cmd - If the user has typed a built-in command then execute
- *    it immediately.  
+ * builtin_cmd - If the user has typed a built-in command then execute it immediately.  
  */
 int builtin_cmd(char **argv) 
 {
@@ -329,7 +328,7 @@ int builtin_cmd(char **argv)
         return 1;
     }
 
-    if (!strcmp(cmd, "fg") || !strcmp(cmd, "bf"))
+    if (!strcmp(cmd, "fg") || !strcmp(cmd, "bg"))
     {
         do_bgfg(argv);
 
@@ -374,29 +373,36 @@ void do_bgfg(char **argv)
         job_ptr = getjobpid(jobs, pid);
     }
 
-    if (job_ptr)
+    if (!job_ptr)
     {
-        pid = job_ptr->pid;
-        Kill(-pid, SIGCONT);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        return;
+    }
+
+    pid = job_ptr->pid;
+    Kill(-pid, SIGCONT);
+
+    if (!strcmp(argv[0], "fg"))
+    {
+        job_ptr->state = FG;
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
+        waitfg(pid);
+        return;
+    }
+
+    if (!strcmp(argv[0], "bg"))
+    {
+        job_ptr->state = BG;
+        fprintf(stdout, "[%d] (%d) %s", job_ptr->jid, pid, job_ptr->cmdline);
 
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
-        if (strcmp(argv[0], "fg"))
-        {
-            job_ptr->state = FG;
-            waitfg(pid);
-        }
-        else if (strcmp(argv[0], "bg"))
-        {
-            job_ptr->state = BG;
-        }
-        else
-            app_error("do_bgfg command not supported");
+        return;
     }
-    else
-    {
-        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
-    }
+
+    app_error("do_bgfg command not supported"); /* Control never reaches here */
+
     return;
 }
 

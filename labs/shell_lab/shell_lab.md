@@ -392,7 +392,48 @@
     [1] (889865) Running ./myspin 4 &
     [2] (889867) Stopped ./myspin 5 
     ```
+
 ### Trace09
+- Result:
+    ```
+    make rtest09
+    ./sdriver.pl -t trace09.txt -s ./tshref -a "-p"
+    #
+    # trace09.txt - Process bg builtin command
+    #
+    tsh> ./myspin 4 &
+    [1] (891804) ./myspin 4 &
+    tsh> ./myspin 5
+    Job [2] (891806) stopped by signal 20
+    tsh> jobs
+    [1] (891804) Running ./myspin 4 &
+    [2] (891806) Stopped ./myspin 5 
+    tsh> bg %2
+    [2] (891806) ./myspin 5 
+    tsh> jobs
+    [1] (891804) Running ./myspin 4 &
+    [2] (891806) Running ./myspin 5
+    ```
+
+    ```
+    make test09
+    ./sdriver.pl -t trace09.txt -s ./tsh -a "-p"
+    #
+    # trace09.txt - Process bg builtin command
+    #
+    tsh> ./myspin 4 &
+    [1] (898452) ./myspin 4 &
+    tsh> ./myspin 5
+    job [2] (898454) stopped by signal 20
+    tsh> jobs
+    [1] (898452) Running ./myspin 4 &
+    [2] (898454) Stopped ./myspin 5 
+    tsh> bg %2
+    [2] (898454) ./myspin 5 
+    tsh> jobs
+    [1] (898452) Running ./myspin 4 &
+    [2] (898454) Running ./myspin 5 
+    ```
 ### Trace10
 ### Trace11
 ### Trace12
