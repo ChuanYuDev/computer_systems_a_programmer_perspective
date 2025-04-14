@@ -519,7 +519,151 @@
     900686 pts/2    R      0:00 /bin/ps a
     ```
 ### Trace12
+- Result:
+    ```
+    make rtest12
+    ./sdriver.pl -t trace12.txt -s ./tshref -a "-p"
+    #
+    # trace12.txt - Forward SIGTSTP to every process in foreground process group
+    #
+    tsh> ./mysplit 4
+    Job [1] (900880) stopped by signal 20
+    tsh> jobs
+    [1] (900880) Stopped ./mysplit 4 
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    900875 pts/2    S+     0:00 make rtest12
+    900876 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace12.txt -s ./tshref -a "-p"
+    900877 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace12.txt -s ./tshref -a -p
+    900878 pts/2    S+     0:00 ./tshref -p
+    900880 pts/2    T      0:00 ./mysplit 4
+    900881 pts/2    T      0:00 ./mysplit 4
+    900899 pts/2    R      0:00 /bin/ps a
+    ```
+
+    ```
+    make test12
+    ./sdriver.pl -t trace12.txt -s ./tsh -a "-p"
+    #
+    # trace12.txt - Forward SIGTSTP to every process in foreground process group
+    #
+    tsh> ./mysplit 4
+    job [1] (900941) stopped by signal 20
+    tsh> jobs
+    [1] (900941) Stopped ./mysplit 4 
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    900936 pts/2    S+     0:00 make test12
+    900937 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace12.txt -s ./tsh -a "-p"
+    900938 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace12.txt -s ./tsh -a -p
+    900939 pts/2    S+     0:00 ./tsh -p
+    900941 pts/2    T      0:00 ./mysplit 4
+    900942 pts/2    T      0:00 ./mysplit 4
+    900960 pts/2    R      0:00 /bin/ps a
+    ```
+
 ### Trace13
+- Result:
+    ```
+    make rtest13
+    ./sdriver.pl -t trace13.txt -s ./tshref -a "-p"
+    #
+    # trace13.txt - Restart every stopped process in process group
+    #
+    tsh> ./mysplit 4
+    Job [1] (901044) stopped by signal 20
+    tsh> jobs
+    [1] (901044) Stopped ./mysplit 4 
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    901039 pts/2    S+     0:00 make rtest13
+    901040 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace13.txt -s ./tshref -a "-p"
+    901041 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tshref -a -p
+    901042 pts/2    S+     0:00 ./tshref -p
+    901044 pts/2    T      0:00 ./mysplit 4
+    901045 pts/2    T      0:00 ./mysplit 4
+    901064 pts/2    R      0:00 /bin/ps a
+    tsh> fg %1
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    901039 pts/2    S+     0:00 make rtest13
+    901040 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace13.txt -s ./tshref -a "-p"
+    901041 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tshref -a -p
+    901042 pts/2    S+     0:00 ./tshref -p
+    901081 pts/2    R      0:00 /bin/ps a
+    ```
+
+    ```
+    make test13
+    ./sdriver.pl -t trace13.txt -s ./tsh -a "-p"
+    #
+    # trace13.txt - Restart every stopped process in process group
+    #
+    tsh> ./mysplit 4
+    job [1] (901126) stopped by signal 20
+    tsh> jobs
+    [1] (901126) Stopped ./mysplit 4 
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    901121 pts/2    S+     0:00 make test13
+    901122 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace13.txt -s ./tsh -a "-p"
+    901123 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tsh -a -p
+    901124 pts/2    S+     0:00 ./tsh -p
+    901126 pts/2    T      0:00 ./mysplit 4
+    901127 pts/2    T      0:00 ./mysplit 4
+    901146 pts/2    R      0:00 /bin/ps a
+    tsh> fg %1
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    901121 pts/2    S+     0:00 make test13
+    901122 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace13.txt -s ./tsh -a "-p"
+    901123 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace13.txt -s ./tsh -a -p
+    901124 pts/2    S+     0:00 ./tsh -p
+    901193 pts/2    R      0:00 /bin/ps a
+    ```
+    
 ### Trace14
 ### Trace15
 ### Trace16
