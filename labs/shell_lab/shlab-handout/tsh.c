@@ -155,7 +155,8 @@ int main(int argc, char **argv)
         if ((fgets(cmdline, MAXLINE, stdin) == NULL) && ferror(stdin))
             app_error("fgets error");
 
-        if (feof(stdin))
+        /* trace01 */
+        if (feof(stdin)) 
         { 
             /* End of file (ctrl-d) */
             fflush(stdout);
@@ -207,6 +208,7 @@ void eval(char *cmdline)
 
         if ((pid = Fork()) == 0)
         {
+            /* trace07 */
             Setpgid(0, 0); /* Create unique process group */
             Sigprocmask(SIG_SETMASK, &prev_one, NULL); /* Unblock SIGCHLD*/
 
@@ -225,9 +227,12 @@ void eval(char *cmdline)
 
         if (!bg)
         {
+            /* trace03 */
+
             waitfg(pid); /* Wait for foreground job to terminate */
         }
         else
+            /* trace04 */
             fprintf(stdout, "[%d] (%d) %s", jid, pid, cmdline);
     }
 
@@ -314,11 +319,13 @@ int builtin_cmd(char **argv)
 
     Sigfillset(&mask_all);
 
+    /* trace02 */
     if (!strcmp(cmd, "quit"))
     {
         exit(0);
     }
 
+    /* trace05 */
     if (!strcmp(cmd, "jobs"))
     {
         Sigprocmask(SIG_BLOCK, &mask_all, &prev_all); /* Block all the signals */
@@ -344,10 +351,12 @@ int builtin_cmd(char **argv)
  * bg:
  * Change a stopped background job <job> to a running background job
  * Job state ST -> BG 
+ * trace09
  * 
  * fg:
  * Change a stopped or running background job <job> to a running in the foreground
  * Job state ST -> FG or BG -> FG
+ * trace10
  */
 void do_bgfg(char **argv) 
 {
@@ -483,9 +492,8 @@ void sigchld_handler(int sig)
 }
 
 /* 
- * sigint_handler - The kernel sends a SIGINT to the shell whenver the
- *    user types ctrl-c at the keyboard.  Catch it and send it along
- *    to the foreground job.  
+ * sigint_handler - The kernel sends a SIGINT to the shell whenver the user types ctrl-c at the keyboard.  Catch it and send it along to the foreground job.  
+ * trace06
  */
 void sigint_handler(int sig) 
 {
@@ -500,7 +508,7 @@ void sigint_handler(int sig)
     pid = fgpid(jobs);
 
     if (pid > 0)
-        Kill(-pid, SIGINT);
+        Kill(-pid, SIGINT); /* trace11 */
 
     Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
@@ -509,9 +517,8 @@ void sigint_handler(int sig)
 }
 
 /*
- * sigtstp_handler - The kernel sends a SIGTSTP to the shell whenever
- *     the user types ctrl-z at the keyboard. Catch it and suspend the
- *     foreground job by sending it a SIGTSTP.  
+ * sigtstp_handler - The kernel sends a SIGTSTP to the shell whenever the user types ctrl-z at the keyboard. Catch it and suspend the foreground job by sending it a SIGTSTP.  
+ * trace08
  */
 void sigtstp_handler(int sig) 
 {

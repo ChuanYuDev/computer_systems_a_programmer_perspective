@@ -434,8 +434,90 @@
     [1] (898452) Running ./myspin 4 &
     [2] (898454) Running ./myspin 5 
     ```
+
 ### Trace10
+- Result:
+    ```
+    make rtest10
+    ./sdriver.pl -t trace10.txt -s ./tshref -a "-p"
+    #
+    # trace10.txt - Process fg builtin command. 
+    #
+    tsh> ./myspin 4 &
+    [1] (899207) ./myspin 4 &
+    tsh> fg %1
+    Job [1] (899207) stopped by signal 20
+    tsh> jobs
+    [1] (899207) Stopped ./myspin 4 &
+    tsh> fg %1
+    tsh> jobs
+    ```
+
+    ```
+    make test10
+    ./sdriver.pl -t trace10.txt -s ./tsh -a "-p"
+    #
+    # trace10.txt - Process fg builtin command. 
+    #
+    tsh> ./myspin 4 &
+    [1] (899281) ./myspin 4 &
+    tsh> fg %1
+    job [1] (899281) stopped by signal 20
+    tsh> jobs
+    [1] (899281) Stopped ./myspin 4 &
+    tsh> fg %1
+    tsh> jobs
+    ```
+
 ### Trace11
+- Result:
+    ```
+    make rtest11
+    ./sdriver.pl -t trace11.txt -s ./tshref -a "-p"
+    #
+    # trace11.txt - Forward SIGINT to every process in foreground process group
+    #
+    tsh> ./mysplit 4
+    Job [1] (900494) terminated by signal 2
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    900489 pts/2    S+     0:00 make rtest11
+    900490 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace11.txt -s ./tshref -a "-p"
+    900491 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace11.txt -s ./tshref -a -p
+    900492 pts/2    S+     0:00 ./tshref -p
+    900515 pts/2    R      0:00 /bin/ps a
+    ```
+
+    ```
+    make test11
+    ./sdriver.pl -t trace11.txt -s ./tsh -a "-p"
+    #
+    # trace11.txt - Forward SIGINT to every process in foreground process group
+    #
+    tsh> ./mysplit 4
+    job [1] (900665) terminated by signal 2
+    tsh> /bin/ps a
+        PID TTY      STAT   TIME COMMAND
+        936 tty1     Ss     0:00 /bin/login -p --
+    1209 tty1     S+     0:00 -bash
+    861472 pts/1    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    861499 pts/2    Ss     0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    865753 pts/3    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    880299 pts/0    Ss+    0:00 /bin/bash --init-file /home/yuchuan/.vscode-server/cli/servers/Stable-7c6fdfb0b8f2f675eb0b47f3d95eeca78962565b/server/out/vs/workbench/contrib/terminal/common/scripts/shellIntegration-bash.sh
+    887940 pts/3    S      0:00 ./tsh -p
+    900660 pts/2    S+     0:00 make test11
+    900661 pts/2    S+     0:00 /bin/sh -c ./sdriver.pl -t trace11.txt -s ./tsh -a "-p"
+    900662 pts/2    S+     0:00 /usr/bin/perl ./sdriver.pl -t trace11.txt -s ./tsh -a -p
+    900663 pts/2    S+     0:00 ./tsh -p
+    900686 pts/2    R      0:00 /bin/ps a
+    ```
 ### Trace12
 ### Trace13
 ### Trace14
