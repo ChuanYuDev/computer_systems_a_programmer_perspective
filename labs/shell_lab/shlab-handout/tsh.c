@@ -470,6 +470,8 @@ void waitfg(pid_t pid)
  *     received a SIGSTOP or SIGTSTP signal. The handler reaps all
  *     available zombie children, but doesn't wait for any other
  *     currently running children to terminate.  
+ * 
+ * trace16
  */
 void sigchld_handler(int sig) 
 {

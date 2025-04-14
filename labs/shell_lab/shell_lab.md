@@ -7,6 +7,9 @@
 - [Solution](#solution)
     - [Data structure](#data-structure)
     - [Function](#function)
+    - [Result](#result)
+
+- [Remaining problems](#remaining-problems)
 
 ## Introduction
 - Students implement their own simple Unix shell program with job control, including the `ctrl-c` and `ctrl-z` keystrokes, `fg`, `bg`, and `jobs` commands
@@ -14,7 +17,7 @@
 - This is the students' first introduction to application level concurrency, and gives them a clear idea of Unix process control, signals, and signal handling
 
 ## Duration
-- 2025/3/22 - Due: 2025/4/14
+- 2025/3/22 - 2025/4/14
 
 ## Chapter
 - Chapter 8: Exceptional Control Flow
@@ -182,3 +185,9 @@
 
 - `Waitpid`
     - **Because `Waitpid` will be revoked in the signal handler, is it safe to use `fprintf` in `unix_error`?**
+
+### Result
+- All the results are printed in [`tsh.out`](./shlab-handout/tsh.out) which we can compare with [`tshref.out`](./shlab-handout/tshref.out) via other tools such as https://text-compare.com
+
+## Remaining problems
+- How to handle add too many jobs? Refer to `tshref`?
