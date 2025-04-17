@@ -10,6 +10,8 @@
         - [M = 64, N = 64](#m--64-n--64)
         - [M = 61, N = 67](#m--61-n--67)
 
+- [The remaining problem](#the-remaining-problem)
+
 ## Introduction
 - At CMU we use this lab in place of the Performance Lab
 - Students write a general-purpose cache simulator, and then optimize a small matrix transpose kernel to minimize the number of misses on a simulated cache
@@ -191,3 +193,6 @@
 
 #### M = 61, N = 67
 - We only hit 2133 misses, to be done
+
+## The remaining problem
+- M = 61, N = 67
