@@ -10,7 +10,7 @@
 - This lab exposes students to the interesting world of network programming, and ties together many of the concepts from the course, such as byte ordering, caching, process control, signals, signal handling, file I/O, concurrency, and synchronization
 
 ## Duration
-- 2025/4/15 - Due: 2025/4/30
+- 2025/4/15 - Due: 2025/5/10
 
 ## Chapter
 - Chapter 10: System-Level I/O

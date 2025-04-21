@@ -14,5 +14,5 @@
 - When students finish this one, they really understand pointers!
 
 ## Duration
-
+- 2025/5/11 - Due: 2025/5/31
 ## Chapter
