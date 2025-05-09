@@ -85,7 +85,7 @@
     - Each time, we access the new row of `B`, the address increase `0x80`
         - $32 \times 4 = 2^7$ bytes
 
-        - Although the `A` and `B` matrices are allocated as $256 \times 256$, when they are passed as the function argument, there will be implicit transfer to the type `int A[N][M]` and `int B[M][N]` respectively
+        - Although the `A` and `B` matrices are allocated as $256 \times 256$, when they are passed as the function argument, there will be implicit transferred to the type `int A[N][M]` and `int B[M][N]` respectively
     
     - If the conflict miss occurs, the set bits are the same, the address will need to increase $2^{10}$
 
@@ -163,7 +163,7 @@
     - A1 transposes to B1
     - When A2 transposes to B2, B2 will have conflicts with B1
 
-- We use the following method to completely elimiate the cache conflict when we tranpose non-diagonal block
+- We use the following method to completely eliminate the cache conflict when we tranpose non-diagonal block
 
     Index|Operation | Cache
     -|-|-
