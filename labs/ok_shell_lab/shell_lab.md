@@ -23,9 +23,6 @@
 - Chapter 8: Exceptional Control Flow
 
 ## Solution
-### TODO
-- Why make test08 kill error?
-
 ### Data structure
 - `job_t`
     - Each job can be identified by PID or JID 
