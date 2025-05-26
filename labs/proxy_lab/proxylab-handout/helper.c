@@ -5,6 +5,11 @@ void unix_error(char *msg) /* Unix-style error */
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
 }
 
+void gai_error(int code ,char *msg)
+{
+    fprintf(stderr, "%s: %s\n", msg, gai_strerror(code));
+}
+
 /*
  * rio_writen - Robustly write n bytes (unbuffered)
  */
@@ -51,6 +56,7 @@ void Rio_writen(int fd, void *usrbuf, size_t n)
 int open_clientfd(char *hostname, char *port)
 {
     int clientfd, rc;
+    char buf[MAXBUF];
     struct addrinfo hints, *listp, *p;
 
     /* Get a list of potential server addresses */
@@ -61,7 +67,8 @@ int open_clientfd(char *hostname, char *port)
 
     if ((rc = getaddrinfo(hostname, port, &hints, &listp)) != 0)
     {
-        fprintf(stderr, "getaddrinfo failed (%s:%s): %s\n", hostname, port, gai_strerror(rc));
+        sprintf(buf, "getaddrinfo failed (%s:%s)", hostname, port);
+        gai_error(rc, buf);
         return -2;
     }
   
@@ -78,7 +85,7 @@ int open_clientfd(char *hostname, char *port)
 
         if (close(clientfd) < 0)
         { /* Connect failed, try another */  //line:netp:openclientfd:closefd
-            fprintf(stderr, "open_clientfd: close failed: %s\n", strerror(errno));
+            unix_error("open_clientfd: close failed");
 
             return -1;
         } 
@@ -114,15 +121,18 @@ int open_listenfd(char *port)
 {
     struct addrinfo hints, *listp, *p;
     int listenfd, rc, optval=1;
+    char buf[MAXBUF];
 
     /* Get a list of potential server addresses */
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_socktype = SOCK_STREAM;             /* Accept connections */
     hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG; /* ... on any IP address */
     hints.ai_flags |= AI_NUMERICSERV;            /* ... using port number */
+
     if ((rc = getaddrinfo(NULL, port, &hints, &listp)) != 0)
     {
-        fprintf(stderr, "getaddrinfo failed (port %s): %s\n", port, gai_strerror(rc));
+        sprintf(buf, "getaddrinfo failed (port:%s)", port);
+        gai_error(rc, buf);
         return -2;
     }
 
@@ -143,7 +153,7 @@ int open_listenfd(char *port)
 
         if (close(listenfd) < 0)
         { /* Bind failed, try the next */
-            fprintf(stderr, "open_listenfd close failed: %s\n", strerror(errno));
+            unix_error("open_listenfd: close failed");
             return -1;
         }
     }

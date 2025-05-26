@@ -40,6 +40,9 @@
 - TO DO:
     - Error-handling functions modification
         - Temporarily remove `exit()`
+    
+    - `proxy.c: main`
+        - Is there any better method to handle error?
 
 ### Part II: dealing with multiple concurrent requests
 

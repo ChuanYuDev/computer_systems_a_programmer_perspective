@@ -1,1 +1,0 @@
-curl -v --proxy http://localhost:2702 http://localhost:2703/home.html

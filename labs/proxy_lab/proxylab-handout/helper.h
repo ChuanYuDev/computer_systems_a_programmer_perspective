@@ -11,10 +11,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
+typedef struct sockaddr SA;
 
 /* Misc constants */
 #define	MAXLINE	 8192  /* Max text line length */
@@ -23,6 +26,7 @@
 
 /* Our own error-handling functions */
 void unix_error(char *msg);
+void gai_error(int code ,char *msg);
 
 /* Rio (Robust I/O) package */
 ssize_t rio_writen(int fd, void *usrbuf, size_t n);
