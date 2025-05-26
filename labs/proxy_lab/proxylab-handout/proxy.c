@@ -13,7 +13,7 @@ void read_request_headers(rio_t *rp);
 
 int main(int argc, char **argv)
 {
-    int listenfd, connfd, rc;
+    int listenfd, connfd;
 
     char hostname[MAXLINE], port[MAXLINE];
 
@@ -44,20 +44,15 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if ((rc = Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0)) != 0)
+        if (!Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0))
         {
-            Close(connfd);
-            continue;
+            printf("Accepted connection from (hostname: %s, port: %s)\n", hostname, port);
         }
-
-        printf("Accepted connection from (hostname: %s, port: %s)\n", hostname, port);
 
         handle_client(connfd);
 
         Close(connfd);
     }
-
-    /* Establish connection to web server */
 
     return 0;
 }
@@ -65,8 +60,33 @@ int main(int argc, char **argv)
 /* Handle HTTP request */
 void handle_client(int connfd)
 {
+    char line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+    rio_t rio;
+
+    rio_readinitb(&rio, connfd);
+
+    if (Rio_readlineb(&rio, line, MAXLINE) < 0)
+    {
+        return;
+    }
+
+    printf("Request line: %s", line);
+    sscanf(line, "%s %s %s", method, uri, version);
+
+    if (strcasecmp(method, "GET"))
+    {
+        client_error(connfd, method, "501", "Not implemented", "Proxy does not implement this method");
+        return;
+    }
+
     // Need to read from connfd then write?
     client_error(connfd, "test", "404", "testshort","testlong");
+
+    // Test read
+    read_request_headers(&rio);
+
+    /* Parse uri */
+    /* Establish connection to web server */
 
 }
 
@@ -107,5 +127,10 @@ void read_request_headers(rio_t *rp)
         Rio_readlineb(rp, line, MAXLINE);
         printf("%s", line);
     } while (strcmp(line, "\r\n"));
+
+}
+
+void parse_uri(char *uri)
+{
 
 }

@@ -49,7 +49,7 @@
     - `proxy.c: main`
         - Is there any better method to handle error?
     
-    - `line:netp:doit:parserequest` note meaning?
+    - `line:netp:doit:parserequest` (`doit` in tiny.c) note meaning?
 
     - Proxy ignore SIGPIPE signal (page 964)?
         - `write` return EPIPE errors?
