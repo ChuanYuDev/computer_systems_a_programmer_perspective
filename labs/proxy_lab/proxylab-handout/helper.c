@@ -26,6 +26,43 @@ int Close(int fd)
     return rc;
 }
 
+/* Sockets interface wrappers */
+int Accept(int fd, struct sockaddr *addr, socklen_t *addrlen) 
+{
+    int rc;
+
+    if ((rc = accept(fd, addr, addrlen)) < 0)
+        unix_error("Accept error");
+
+    return rc;
+}
+
+/* Protocol independent wrappers */
+int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+{
+    int rc;
+    char buf[MAXBUF];
+
+    if ((rc = getaddrinfo(name, service, hints, res)) != 0) 
+    {
+        sprintf(buf, "Getaddrinfo failed (name: %s, service: %s)", name, service);
+        gai_error(rc, "Getaddrinfo error");
+    }
+
+    return rc;
+}
+
+int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags)
+{
+    int rc;
+
+    if ((rc = getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)) != 0) 
+        gai_error(rc, "Getnameinfo error");
+    
+    return rc;
+}
+
+
 /* Rio (Robust I/O) package */
 /*
  * rio_writen - Robustly write n bytes (unbuffered)
@@ -179,31 +216,6 @@ ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen)
 
     return rc;
 } 
-
-/* Protocol independent wrappers */
-int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res)
-{
-    int rc;
-    char buf[MAXBUF];
-
-    if ((rc = getaddrinfo(name, service, hints, res)) != 0) 
-    {
-        sprintf(buf, "Getaddrinfo failed (name: %s, service: %s)", name, service);
-        gai_error(rc, "Getaddrinfo error");
-    }
-
-    return rc;
-}
-
-int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags)
-{
-    int rc;
-
-    if ((rc = getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)) != 0) 
-        gai_error(rc, "Getnameinfo error");
-    
-    return rc;
-}
 
 /* Reentrant protocol-independent client/server helpers */
 /*

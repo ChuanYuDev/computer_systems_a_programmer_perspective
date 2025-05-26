@@ -41,6 +41,13 @@ typedef struct
 /* Unix I/O wrappers */
 int Close(int fd);
 
+/* Sockets interface wrappers */
+int Accept(int s, struct sockaddr *addr, socklen_t *addrlen);
+
+/* Protocol independent wrappers */
+int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res);
+int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
+
 /* Rio (Robust I/O) package */
 // ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 ssize_t Rio_writen(int fd, void *usrbuf, size_t n);
@@ -48,10 +55,6 @@ ssize_t Rio_writen(int fd, void *usrbuf, size_t n);
 void rio_readinitb(rio_t *rp, int fd);
 // void Rio_readinitb(rio_t *rp, int fd);
 ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
-
-/* Protocol independent wrappers */
-int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res);
-int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 
 /* Reentrant protocol-independent client/server helpers */
 int open_clientfd(char *hostname, char *port);
