@@ -23,7 +23,10 @@ int main(int argc, char **argv)
     }
 
     /* Listen for incoming connections */
-    listenfd = Open_listenfd(argv[1]);
+    if (listenfd = open_listenfd(argv[1]) < 0);
+    {
+        exit(0);
+    }
 
     while(1)
     {
@@ -51,7 +54,7 @@ int main(int argc, char **argv)
         printf("Accepted connection from (%s, %s)\n", hostname, port);
 
         // Need to read from connfd then write?
-        clienterror(connfd, "test", "testnum", "testshort","testlong");
+        client_error(connfd, "test", "testnum", "testshort","testlong");
 
         if (close(connfd) < 0)
         {
@@ -68,7 +71,7 @@ int main(int argc, char **argv)
 }
 
 /* Send error message to client */
-void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
+void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
 {
     char buf[MAXBUF], body[MAXLINE];
 
@@ -90,3 +93,6 @@ void clienterror(int fd, char *cause, char *errnum, char *shortmsg, char *longms
     Rio_writen(fd, buf, strlen(buf));
     Rio_writen(fd, body, strlen(body));
 }
+
+/* Read request headers */
+void read_request_headers()

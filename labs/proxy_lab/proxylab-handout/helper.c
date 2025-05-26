@@ -1,5 +1,6 @@
 #include "helper.h"
 
+/* Our own error-handling functions */
 void unix_error(char *msg) /* Unix-style error */
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
@@ -10,6 +11,22 @@ void gai_error(int code ,char *msg)
     fprintf(stderr, "%s: %s\n", msg, gai_strerror(code));
 }
 
+/* Unix I/O wrappers */
+int Close(int fd)
+{
+    int rc;
+    char buf[MAXBUF];
+
+    if ((rc = close(fd)) < 0)
+    {
+        sprintf(buf, "Close error, fd: %d", fd);
+        unix_error(buf);
+    }
+
+    return rc;
+}
+
+/* Rio (Robust I/O) package */
 /*
  * rio_writen - Robustly write n bytes (unbuffered)
  */
@@ -38,12 +55,157 @@ ssize_t rio_writen(int fd, void *usrbuf, size_t n)
     return n;
 }
 
-void Rio_writen(int fd, void *usrbuf, size_t n)
+ssize_t Rio_writen(int fd, void *usrbuf, size_t n)
 {
-    if (rio_writen(fd, usrbuf, n) != n)
+    ssize_t rc;
+
+    if ((rc = rio_writen(fd, usrbuf, n)) != n)
         unix_error("Rio_writen error");
+    
+    return rc;
 }
 
+/*
+ * rio_readinitb - Associate a descriptor with a read buffer and reset buffer
+ */
+void rio_readinitb(rio_t *rp, int fd) 
+{
+    rp->rio_fd = fd;  
+    rp->rio_cnt = 0;  
+    rp->rio_bufptr = rp->rio_buf;
+}
+
+// void Rio_readinitb(rio_t *rp, int fd)
+// {
+//     rio_readinitb(rp, fd);
+// } 
+
+/* 
+ * rio_read - This is a wrapper for the Unix read() function that
+ *    transfers min(n, rio_cnt) bytes from an internal buffer to a user
+ *    buffer, where n is the number of bytes requested by the user and
+ *    rio_cnt is the number of unread bytes in the internal buffer. On
+ *    entry, rio_read() refills the internal buffer via a call to
+ *    read() if the internal buffer is empty.
+ *  
+ * Return:
+ *  -1: errno set by read() function
+ *   0: EOF
+ *  positive number: the number of bytes transfered from internal buf to usrbuf
+ */
+static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n)
+{
+    int cnt;
+
+    /* Refill if buf is empty */
+    while (rp->rio_cnt <= 0)
+    {  
+        rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+
+        if (rp->rio_cnt < 0)
+        {
+            if (errno != EINTR) /* Interrupted by sig handler return */
+                return -1;
+        }
+
+        else if (rp->rio_cnt == 0)  /* EOF */
+            return 0;
+
+        else 
+            rp->rio_bufptr = rp->rio_buf; /* Reset buffer ptr */
+    }
+
+    /* Copy min(n, rp->rio_cnt) bytes from internal buf to user buf */
+    cnt = n;          
+
+    if (rp->rio_cnt < n)   
+        cnt = rp->rio_cnt;
+
+    memcpy(usrbuf, rp->rio_bufptr, cnt);
+    rp->rio_bufptr += cnt;
+    rp->rio_cnt -= cnt;
+
+    return cnt;
+}
+
+/* 
+ * rio_readlineb - Robustly read a text line (buffered)
+ *
+ * Return:
+ *  -1: errno set by rio_read() function
+ *   0: EOF
+ *  positive number: the number of bytes read (include '\n', exclude '\0')
+ */
+ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+{
+    int n, rc;
+    char c, *bufp = usrbuf;
+
+    for (n = 1; n < maxlen; n++)
+    { 
+        if ((rc = rio_read(rp, &c, 1)) == 1)
+        {
+            *bufp++ = c;
+            if (c == '\n')
+            {
+                n++;
+                break;
+            }
+        }
+
+        else if (rc == 0)
+        {
+            if (n == 1)
+                return 0; /* EOF, no data read */
+            else
+                break;    /* EOF, some data was read */
+        }
+        
+        else
+            return -1;	  /* Error */
+    }
+
+    *bufp = 0;
+
+    return n - 1;
+}
+
+ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+{
+    ssize_t rc;
+
+    if ((rc = rio_readlineb(rp, usrbuf, maxlen)) < 0)
+        unix_error("Rio_readlineb error");
+
+    return rc;
+} 
+
+/* Protocol independent wrappers */
+int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+{
+    int rc;
+    char buf[MAXBUF];
+
+    if ((rc = getaddrinfo(name, service, hints, res)) != 0) 
+    {
+        sprintf(buf, "Getaddrinfo failed (name: %s, service: %s)", name, service);
+        gai_error(rc, "Getaddrinfo error");
+    }
+
+    return rc;
+}
+
+int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags)
+{
+    int rc;
+
+    if ((rc = getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)) != 0) 
+        gai_error(rc, "Getnameinfo error");
+    
+    return rc;
+}
+
+/* Reentrant protocol-independent client/server helpers */
 /*
  * open_clientfd - Open connection to server at <hostname, port> and
  *     return a socket descriptor ready for reading and writing. This
@@ -56,7 +218,6 @@ void Rio_writen(int fd, void *usrbuf, size_t n)
 int open_clientfd(char *hostname, char *port)
 {
     int clientfd, rc;
-    char buf[MAXBUF];
     struct addrinfo hints, *listp, *p;
 
     /* Get a list of potential server addresses */
@@ -65,10 +226,8 @@ int open_clientfd(char *hostname, char *port)
     hints.ai_flags = AI_NUMERICSERV;  /* ... using a numeric port arg. */
     hints.ai_flags |= AI_ADDRCONFIG;  /* Recommended for connections */
 
-    if ((rc = getaddrinfo(hostname, port, &hints, &listp)) != 0)
+    if ((Getaddrinfo(hostname, port, &hints, &listp)) != 0)
     {
-        sprintf(buf, "getaddrinfo failed (%s:%s)", hostname, port);
-        gai_error(rc, buf);
         return -2;
     }
   
@@ -83,10 +242,9 @@ int open_clientfd(char *hostname, char *port)
         if (connect(clientfd, p->ai_addr, p->ai_addrlen) != -1) 
             break; /* Success */
 
-        if (close(clientfd) < 0)
-        { /* Connect failed, try another */  //line:netp:openclientfd:closefd
-            unix_error("open_clientfd: close failed");
-
+        /* Connect failed, try another */  //line:netp:openclientfd:closefd
+        if (Close(clientfd) < 0)
+        { 
             return -1;
         } 
     } 
@@ -99,6 +257,8 @@ int open_clientfd(char *hostname, char *port)
     else    /* The last connect succeeded */
         return clientfd;
 }
+
+// TO DO: if open_clientfd failed, send message back to client?
 
 // int Open_clientfd(char *hostname, char *port) 
 // {
@@ -121,7 +281,6 @@ int open_listenfd(char *port)
 {
     struct addrinfo hints, *listp, *p;
     int listenfd, rc, optval=1;
-    char buf[MAXBUF];
 
     /* Get a list of potential server addresses */
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -129,10 +288,8 @@ int open_listenfd(char *port)
     hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG; /* ... on any IP address */
     hints.ai_flags |= AI_NUMERICSERV;            /* ... using port number */
 
-    if ((rc = getaddrinfo(NULL, port, &hints, &listp)) != 0)
+    if ((rc = Getaddrinfo(NULL, port, &hints, &listp)) != 0)
     {
-        sprintf(buf, "getaddrinfo failed (port:%s)", port);
-        gai_error(rc, buf);
         return -2;
     }
 
@@ -151,39 +308,40 @@ int open_listenfd(char *port)
         if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0)
             break; /* Success */
 
-        if (close(listenfd) < 0)
-        { /* Bind failed, try the next */
-            unix_error("open_listenfd: close failed");
+        /* Bind failed, try the next */
+        if (Close(listenfd) < 0)
+        {
             return -1;
         }
     }
 
     /* Clean up */
     freeaddrinfo(listp);
+
     if (!p) /* No address worked */
         return -1;
 
     /* Make it a listening socket ready to accept connection requests */
     if (listen(listenfd, LISTENQ) < 0)
     {
-        close(listenfd);
+        Close(listenfd);
         return -1;
     }
 
     return listenfd;
 }
 
-int Open_listenfd(char *port) 
-{
-    int rc;
+// int Open_listenfd(char *port) 
+// {
+//     int rc;
 
-    if ((rc = open_listenfd(port)) < 0)
-    {
-        unix_error("Open_listenfd error");
+//     if ((rc = open_listenfd(port)) < 0)
+//     {
+//         unix_error("Open_listenfd error");
 
-        /* Open_listenfd can terminate the program because the connection is not established */
-        exit(0);
-    }
+//         /* Open_listenfd can terminate the program because the connection is not established */
+//         exit(0);
+//     }
 
-    return rc;
-}
+//     return rc;
+// }

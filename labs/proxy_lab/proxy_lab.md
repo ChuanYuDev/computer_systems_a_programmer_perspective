@@ -40,9 +40,22 @@
 - TO DO:
     - Error-handling functions modification
         - Temporarily remove `exit()`
+        1. Original function
+        1. Add error message, return original rc
+        1. Application level, based on rc, do some actions
+
+    - If open_clientfd failed, send message back to client?
     
     - `proxy.c: main`
         - Is there any better method to handle error?
+    
+    - `line:netp:doit:parserequest` note meaning?
+
+    - Proxy ignore SIGPIPE signal (page 964)?
+        - `write` return EPIPE errors?
+    
+    - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
+        - Proxy should not terminate due to this error
 
 ### Part II: dealing with multiple concurrent requests
 
