@@ -9,8 +9,8 @@ static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64;
 
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
-void read_request_headers(rio_t *rp);
 void parse_uri(char *uri, char *hostname, char *port, char *path);
+void read_request_headers(rio_t *rp);
 
 int main(int argc, char **argv)
 {
@@ -28,14 +28,6 @@ int main(int argc, char **argv)
     }
 
     printf("%s", user_agent_hdr);
-
-    // char uri[] = "http://www.cmu.edu/hub/index.html";
-    // char uri[] = "www.cmu.edu/hub/index.html";
-    char uri[] = "www.cmu.edu:8080/hub/index.html";
-
-    char hostname[MAXLINE], port[MAXLINE], path[MAXLINE];
-    parse_uri(uri, hostname, port, path);
-    exit(0);
 
     /* Listen for incoming connections */
     if ((listenfd = open_listenfd(argv[1])) < 0)
@@ -70,6 +62,8 @@ int main(int argc, char **argv)
 void handle_client(int connfd)
 {
     char line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
+    char server_hostname[MAXLINE], server_port[MAXLINE], server_path[MAXLINE];
+    int clientfd;
     rio_t rio;
 
     rio_readinitb(&rio, connfd);
@@ -79,7 +73,8 @@ void handle_client(int connfd)
         return;
     }
 
-    printf("Request line: %s", line);
+    /* Read request line, if the mehod is not `GET`, send error to client, 501 Not implemented */
+    printf("Request line:\n%s", line);
     sscanf(line, "%s %s %s", method, uri, version);
 
     if (strcasecmp(method, "GET"))
@@ -88,15 +83,26 @@ void handle_client(int connfd)
         return;
     }
 
-    // Need to read from connfd then write?
-    client_error(connfd, "test", "404", "testshort","testlong");
+    parse_uri(uri, server_hostname, server_port, server_path);
+    printf("Server hostname: %s, port: %s, path: %s\n", server_hostname, server_port, server_path);
+
+    /* If server hostname is "\0", send error to client, 400 Bad request */
+    if (server_hostname[0] == '\0')
+    {
+        client_error(connfd, server_hostname, "400", "Bad request", "Proxy can't find server hostname");
+        return;
+    }
+
+    /* Establish connection to web server */
+    if ((clientfd = open_clientfd(server_hostname, server_port)) < 0)
+    {
+        client_error(connfd, uri, "400", "Bad request", "Proxy can't connect to server");
+        return;
+    }
 
     // Test read
+    printf("Request headers:\n");
     read_request_headers(&rio);
-
-    /* Parse uri */
-    /* Establish connection to web server */
-
 }
 
 /* Send error message to client */
@@ -126,30 +132,24 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
     Rio_writen(fd, body, strlen(body));
 }
 
-/* Read HTTP request headers */
-void read_request_headers(rio_t *rp)
-{
-    char line[MAXLINE];
-
-    do
-    {
-        Rio_readlineb(rp, line, MAXLINE);
-        printf("%s", line);
-    } while (strcmp(line, "\r\n"));
-
-}
-
+/*
+ * Parse uri
+ * Separate hostname, port and path
+ * If no port is provided, use the default port 80
+ */
 void parse_uri(char *uri, char *hostname, char *port, char *path)
 {
+    char uri_copy[MAXLINE];
     char *hostname_ptr, *port_ptr, *path_ptr;
     char *double_slash = "://", *default_port = "80";
 
-    printf("%s\n", uri);
+    strcpy(uri_copy, uri);
+    // printf("%s\n", uri_copy);
 
-    hostname_ptr = strstr(uri, double_slash);
+    hostname_ptr = strstr(uri_copy, double_slash);
 
     if(!hostname_ptr)
-        hostname_ptr = uri;
+        hostname_ptr = uri_copy;
     
     else
         hostname_ptr += strlen(double_slash);
@@ -170,6 +170,24 @@ void parse_uri(char *uri, char *hostname, char *port, char *path)
     }
 
     strcpy(hostname, hostname_ptr);
+}
 
-    printf("%s, %s, %s\n", hostname, port, path);
+/* Handle server */
+void handle_server(int clientfd)
+{
+
+}
+
+
+/* Read HTTP request headers */
+void read_request_headers(rio_t *rp)
+{
+    char line[MAXLINE];
+
+    do
+    {
+        Rio_readlineb(rp, line, MAXLINE);
+        printf("%s", line);
+    } while (strcmp(line, "\r\n"));
+
 }

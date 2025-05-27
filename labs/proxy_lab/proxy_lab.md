@@ -56,6 +56,8 @@
     
     - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
         - Proxy should not terminate due to this error
+    
+    - `static` function must be written front? because no header
 
 ### Part II: dealing with multiple concurrent requests
 

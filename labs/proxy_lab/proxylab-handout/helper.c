@@ -11,6 +11,11 @@ void gai_error(int code ,char *msg)
     fprintf(stderr, "%s: %s\n", msg, gai_strerror(code));
 }
 
+void app_error(char *msg)
+{
+    fprintf(stderr, "%s\n", msg);
+}
+
 /* Unix I/O wrappers */
 int Close(int fd)
 {
@@ -27,6 +32,16 @@ int Close(int fd)
 }
 
 /* Sockets interface wrappers */
+int Listen(int fd, int backlog)
+{
+    int rc;
+
+    if ((rc = listen(fd, backlog)) < 0)
+        unix_error("LIsten error");
+    
+    return rc;
+}
+
 int Accept(int fd, struct sockaddr *addr, socklen_t *addrlen) 
 {
     int rc;
@@ -229,7 +244,8 @@ ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen)
  */
 int open_clientfd(char *hostname, char *port)
 {
-    int clientfd, rc;
+    int clientfd;
+    char buf[MAXBUF];
     struct addrinfo hints, *listp, *p;
 
     /* Get a list of potential server addresses */
@@ -264,13 +280,16 @@ int open_clientfd(char *hostname, char *port)
     /* Clean up */
     freeaddrinfo(listp);
 
-    if (!p) /* All connects failed */
+    /* All connects failed */
+    if (!p)
+    {
+        sprintf(buf, "open_clientfd error, all connects failed, hostname: %s, port: %s", hostname, port);
+        app_error(buf);
         return -1;
+    }
     else    /* The last connect succeeded */
         return clientfd;
 }
-
-// TO DO: if open_clientfd failed, send message back to client?
 
 // int Open_clientfd(char *hostname, char *port) 
 // {
@@ -292,6 +311,7 @@ int open_clientfd(char *hostname, char *port)
 int open_listenfd(char *port) 
 {
     struct addrinfo hints, *listp, *p;
+    char buf[MAXBUF];
     int listenfd, rc, optval=1;
 
     /* Get a list of potential server addresses */
@@ -330,11 +350,16 @@ int open_listenfd(char *port)
     /* Clean up */
     freeaddrinfo(listp);
 
-    if (!p) /* No address worked */
+    /* No address worked */
+    if (!p) 
+    {
+        sprintf(buf, "open_listenfd error, no address worked, port: %s", port);
+        app_error(buf);
         return -1;
+    }
 
     /* Make it a listening socket ready to accept connection requests */
-    if (listen(listenfd, LISTENQ) < 0)
+    if (Listen(listenfd, LISTENQ) < 0)
     {
         Close(listenfd);
         return -1;
