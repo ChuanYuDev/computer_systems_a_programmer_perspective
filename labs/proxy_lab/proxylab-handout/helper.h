@@ -51,6 +51,7 @@ int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hi
 int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 
 /* Rio (Robust I/O) package */
+ssize_t Rio_readn(int fd, void *usrptr, size_t n);
 // ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 ssize_t Rio_writen(int fd, void *usrbuf, size_t n);
 

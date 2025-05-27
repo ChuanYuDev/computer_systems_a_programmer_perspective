@@ -44,7 +44,9 @@
         1. Add error message, return original rc
         1. Application level, based on rc, do some actions
 
-    - If open_clientfd failed, send message back to client?
+    - If open_clientfd failed, send message back to client OK
+
+    - `request_line_t` struct type?
     
     - `proxy.c: main`
         - Is there any better method to handle error?
@@ -53,11 +55,17 @@
 
     - Proxy ignore SIGPIPE signal (page 964)?
         - `write` return EPIPE errors?
+
+    - Tiny error: Rio_writen error: Connection reset by peer?
+        - Only appear once?
     
     - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
         - Proxy should not terminate due to this error
     
     - `static` function must be written front? because no header
+    - Expose all the function in the header file?
+
+    - Tiny: `clienterror` http response has no content-length response header, so how do I read response body?
 
 ### Part II: dealing with multiple concurrent requests
 

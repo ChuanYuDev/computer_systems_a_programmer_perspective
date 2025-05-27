@@ -11,8 +11,8 @@ void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 void parse_uri(char *uri, char *host, char *hostname, char *port, char *path);
 
-void handle_server(int clientfd, char *server_host, rio_t *client_rp);
-void read_request_headers(rio_t *rp);
+void handle_server(int clientfd, int connfd, char *server_host, char *server_path, rio_t *client_rp);
+void read_headers(rio_t *rp);
 
 int main(int argc, char **argv)
 {
@@ -104,7 +104,7 @@ void handle_client(int connfd)
 
     printf("Connected to server %s:%s\n", server_hostname, server_port);
 
-    handle_server(clientfd, server_host, &client_rio);
+    handle_server(clientfd, connfd, server_host, server_path, &client_rio);
 
     Close(clientfd);
 
@@ -182,18 +182,52 @@ void parse_uri(char *uri, char *host, char *hostname, char *port, char *path)
 }
 
 /* Handle server */
-void handle_server(int clientfd, char *server_host, rio_t *client_rp)
+void handle_server(int clientfd, int connfd, char *server_host, char *server_path, rio_t *client_rp)
 {
-    // Test read
-    printf("Client request headers:\n");
-    read_request_headers(client_rp);
+
+    char buf[MAXBUF], line[MAXLINE];
+    rio_t server_rio;
+
+    rio_readinitb(&server_rio, clientfd);
+
+    /* Send HTTP request line with HTTP/1.0 to server */
+    sprintf(buf, "GET %s HTTP/1.0\r\n", server_path);
+    Rio_writen(clientfd, buf, strlen(buf));
 
     /* Send HTTP request to server */
+    printf("Client request headers:\n");
+
+    // TO DO: Modify HTTP request, first just send client header to the server without change
+    do
+    {
+        Rio_readlineb(client_rp, line, MAXLINE);
+        printf("%s", line);
+
+        Rio_writen(clientfd, line, strlen(line));
+    }
+    while (strcmp(line, "\r\n"));
+
+    /* Receive server HTTP response */
+    printf("Server request headers:\n");
+    do
+    {
+        Rio_readlineb(&server_rio, line, MAXLINE);
+        printf("%s", line);
+
+        /* Send HTTP response header to the client directly */
+        Rio_writen(connfd, line, strlen(line));
+    }
+    while (strcmp(line, "\r\n"));
+
+
+    /* Read content-length and allocate enough memory to hold the response body */
+
+    /* Send HTTP response body to the client via Rio_writen */
 }
 
 
 /* Read HTTP request headers */
-void read_request_headers(rio_t *rp)
+void read_headers(rio_t *rp)
 {
     char line[MAXLINE];
 
