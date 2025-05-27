@@ -10,12 +10,13 @@ static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64;
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 void read_request_headers(rio_t *rp);
+void parse_uri(char *uri, char *hostname, char *port, char *path);
 
 int main(int argc, char **argv)
 {
     int listenfd, connfd;
 
-    char hostname[MAXLINE], port[MAXLINE];
+    char client_hostname[MAXLINE], client_port[MAXLINE];
 
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
@@ -27,6 +28,14 @@ int main(int argc, char **argv)
     }
 
     printf("%s", user_agent_hdr);
+
+    // char uri[] = "http://www.cmu.edu/hub/index.html";
+    // char uri[] = "www.cmu.edu/hub/index.html";
+    char uri[] = "www.cmu.edu:8080/hub/index.html";
+
+    char hostname[MAXLINE], port[MAXLINE], path[MAXLINE];
+    parse_uri(uri, hostname, port, path);
+    exit(0);
 
     /* Listen for incoming connections */
     if ((listenfd = open_listenfd(argv[1])) < 0)
@@ -44,9 +53,9 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if (!Getnameinfo((SA *) &clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0))
+        if (!Getnameinfo((SA *) &clientaddr, clientlen, client_hostname, MAXLINE, client_port, MAXLINE, 0))
         {
-            printf("Accepted connection from (hostname: %s, port: %s)\n", hostname, port);
+            printf("Accepted connection from (client hostname: %s, client port: %s)\n", client_hostname, client_port);
         }
 
         handle_client(connfd);
@@ -130,7 +139,37 @@ void read_request_headers(rio_t *rp)
 
 }
 
-void parse_uri(char *uri)
+void parse_uri(char *uri, char *hostname, char *port, char *path)
 {
+    char *hostname_ptr, *port_ptr, *path_ptr;
+    char *double_slash = "://", *default_port = "80";
 
+    printf("%s\n", uri);
+
+    hostname_ptr = strstr(uri, double_slash);
+
+    if(!hostname_ptr)
+        hostname_ptr = uri;
+    
+    else
+        hostname_ptr += strlen(double_slash);
+    
+    path_ptr = strstr(hostname_ptr, "/");
+    strcpy(path, path_ptr);
+    *path_ptr = '\0';
+
+    port_ptr = strstr(hostname_ptr, ":");
+
+    if (!port_ptr)
+        strcpy(port, default_port);
+    
+    else
+    {
+        strcpy(port, port_ptr + 1);
+        *port_ptr = '\0';
+    }
+
+    strcpy(hostname, hostname_ptr);
+
+    printf("%s, %s, %s\n", hostname, port, path);
 }
