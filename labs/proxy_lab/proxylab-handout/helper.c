@@ -283,7 +283,7 @@ int open_clientfd(char *hostname, char *port)
     /* All connects failed */
     if (!p)
     {
-        sprintf(buf, "open_clientfd error, all connects failed, hostname: %s, port: %s", hostname, port);
+        sprintf(buf, "open_clientfd error, all connects failed to server: %s:%s", hostname, port);
         app_error(buf);
         return -1;
     }

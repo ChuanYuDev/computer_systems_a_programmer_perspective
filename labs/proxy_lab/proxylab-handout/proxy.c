@@ -9,7 +9,9 @@ static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64;
 
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
-void parse_uri(char *uri, char *hostname, char *port, char *path);
+void parse_uri(char *uri, char *host, char *hostname, char *port, char *path);
+
+void handle_server(int clientfd, char *server_host, rio_t *client_rp);
 void read_request_headers(rio_t *rp);
 
 int main(int argc, char **argv)
@@ -47,7 +49,7 @@ int main(int argc, char **argv)
 
         if (!Getnameinfo((SA *) &clientaddr, clientlen, client_hostname, MAXLINE, client_port, MAXLINE, 0))
         {
-            printf("Accepted connection from (client hostname: %s, client port: %s)\n", client_hostname, client_port);
+            printf("Accepted client connection from %s:%s\n", client_hostname, client_port);
         }
 
         handle_client(connfd);
@@ -62,19 +64,19 @@ int main(int argc, char **argv)
 void handle_client(int connfd)
 {
     char line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
-    char server_hostname[MAXLINE], server_port[MAXLINE], server_path[MAXLINE];
+    char server_host[MAXLINE], server_hostname[MAXLINE], server_port[MAXLINE], server_path[MAXLINE];
     int clientfd;
-    rio_t rio;
+    rio_t client_rio;
 
-    rio_readinitb(&rio, connfd);
+    rio_readinitb(&client_rio, connfd);
 
-    if (Rio_readlineb(&rio, line, MAXLINE) < 0)
+    if (Rio_readlineb(&client_rio, line, MAXLINE) < 0)
     {
         return;
     }
 
     /* Read request line, if the mehod is not `GET`, send error to client, 501 Not implemented */
-    printf("Request line:\n%s", line);
+    printf("Client request line:\n%s", line);
     sscanf(line, "%s %s %s", method, uri, version);
 
     if (strcasecmp(method, "GET"))
@@ -83,8 +85,8 @@ void handle_client(int connfd)
         return;
     }
 
-    parse_uri(uri, server_hostname, server_port, server_path);
-    printf("Server hostname: %s, port: %s, path: %s\n", server_hostname, server_port, server_path);
+    parse_uri(uri, server_host, server_hostname, server_port, server_path);
+    printf("Server host: %s, hostname: %s, port: %s, path: %s\n", server_host, server_hostname, server_port, server_path);
 
     /* If server hostname is "\0", send error to client, 400 Bad request */
     if (server_hostname[0] == '\0')
@@ -96,13 +98,16 @@ void handle_client(int connfd)
     /* Establish connection to web server */
     if ((clientfd = open_clientfd(server_hostname, server_port)) < 0)
     {
-        client_error(connfd, uri, "400", "Bad request", "Proxy can't connect to server");
+        client_error(connfd, server_host, "400", "Bad request", "Proxy can't connect to server");
         return;
     }
 
-    // Test read
-    printf("Request headers:\n");
-    read_request_headers(&rio);
+    printf("Connected to server %s:%s\n", server_hostname, server_port);
+
+    handle_server(clientfd, server_host, &client_rio);
+
+    Close(clientfd);
+
 }
 
 /* Send error message to client */
@@ -136,8 +141,10 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
  * Parse uri
  * Separate hostname, port and path
  * If no port is provided, use the default port 80
+ * 
+ * host: hostname or hostname:port based on uri
  */
-void parse_uri(char *uri, char *hostname, char *port, char *path)
+void parse_uri(char *uri, char *host, char *hostname, char *port, char *path)
 {
     char uri_copy[MAXLINE];
     char *hostname_ptr, *port_ptr, *path_ptr;
@@ -158,6 +165,8 @@ void parse_uri(char *uri, char *hostname, char *port, char *path)
     strcpy(path, path_ptr);
     *path_ptr = '\0';
 
+    strcpy(host, hostname_ptr);
+
     port_ptr = strstr(hostname_ptr, ":");
 
     if (!port_ptr)
@@ -173,9 +182,13 @@ void parse_uri(char *uri, char *hostname, char *port, char *path)
 }
 
 /* Handle server */
-void handle_server(int clientfd)
+void handle_server(int clientfd, char *server_host, rio_t *client_rp)
 {
+    // Test read
+    printf("Client request headers:\n");
+    read_request_headers(client_rp);
 
+    /* Send HTTP request to server */
 }
 
 
