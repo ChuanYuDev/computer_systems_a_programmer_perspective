@@ -44,8 +44,6 @@
         1. Add error message, return original rc
         1. Application level, based on rc, do some actions
 
-    - If open_clientfd failed, send message back to client OK
-
     - `request_line_t` struct type?
     
     - `proxy.c: main`

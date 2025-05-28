@@ -12,7 +12,7 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
 void parse_uri(char *uri, char *host, char *hostname, char *port, char *path);
 
 void handle_server(int clientfd, int connfd, char *server_host, char *server_path, rio_t *client_rp);
-void read_headers(rio_t *rp);
+// void read_headers(rio_t *rp);
 
 int main(int argc, char **argv)
 {
@@ -29,7 +29,7 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    printf("%s", user_agent_hdr);
+    // printf("%s", user_agent_hdr);
 
     /* Listen for incoming connections */
     if ((listenfd = open_listenfd(argv[1])) < 0)
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 
         if (!Getnameinfo((SA *) &clientaddr, clientlen, client_hostname, MAXLINE, client_port, MAXLINE, 0))
         {
-            printf("Accepted client connection from %s:%s\n", client_hostname, client_port);
+            printf("\nAccepted client connection from %s:%s\n", client_hostname, client_port);
         }
 
         handle_client(connfd);
@@ -98,6 +98,7 @@ void handle_client(int connfd)
     /* Establish connection to web server */
     if ((clientfd = open_clientfd(server_hostname, server_port)) < 0)
     {
+        /* If open_clientfd failed, send message back to client */
         client_error(connfd, server_host, "400", "Bad request", "Proxy can't connect to server");
         return;
     }
@@ -187,6 +188,9 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
 
     char buf[MAXBUF], line[MAXLINE];
     ssize_t read_bytes;
+    char contain_host = 0;
+
+    char *user_agent_name = "User-Agent:", *connection_name = "Connection:", *proxy_connection_name = "Proxy-Connection";
 
     /* Send HTTP request line with HTTP/1.0 to server */
     sprintf(buf, "GET %s HTTP/1.0\r\n", server_path);
@@ -195,15 +199,39 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
     /* Send HTTP request to server */
     printf("Client request headers:\n");
 
-    // TO DO: Modify HTTP request, first just send client header to the server without change
-    do
+    Rio_readlineb(client_rp, line, MAXLINE);
+
+    while (strcmp(line, "\r\n"))
     {
-        Rio_readlineb(client_rp, line, MAXLINE);
         printf("%s", line);
 
-        Rio_writen(clientfd, line, strlen(line));
+        if (!contain_host && strstr(line, "Host:"))
+            contain_host = 1;
+
+        /* Do not send client User-Agent, Connection, Proxy-Connection headers to server */
+        if (!strstr(line, user_agent_name) && !strstr(line, connection_name) && !strstr(line, proxy_connection_name))
+            Rio_writen(clientfd, line, strlen(line));
+
+        Rio_readlineb(client_rp, line, MAXLINE);
     }
-    while (strcmp(line, "\r\n"));
+
+    if (!contain_host)
+    {
+        sprintf(buf, "Host: %s\r\n", server_host);
+        Rio_writen(clientfd, buf, strlen(buf));
+    }
+
+    /* Send User-Agent to server */
+    strcpy(buf, user_agent_hdr);
+    Rio_writen(clientfd, buf, strlen(buf));
+
+    /* Send Connection to server */
+    sprintf(buf, "%s close\r\n", connection_name);
+    Rio_writen(clientfd, buf, strlen(buf));
+
+    /* Send Proxy-Connection and \r\n to server */
+    sprintf(buf, "%s close\r\n\r\n", proxy_connection_name);
+    Rio_writen(clientfd, buf, strlen(buf));
 
     /* Receive server HTTP response and send to the client*/
     do
@@ -218,14 +246,14 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
 }
 
 /* Read HTTP request headers */
-void read_headers(rio_t *rp)
-{
-    char line[MAXLINE];
+// void read_headers(rio_t *rp)
+// {
+//     char line[MAXLINE];
 
-    do
-    {
-        Rio_readlineb(rp, line, MAXLINE);
-        printf("%s", line);
-    } while (strcmp(line, "\r\n"));
+//     do
+//     {
+//         Rio_readlineb(rp, line, MAXLINE);
+//         printf("%s", line);
+//     } while (strcmp(line, "\r\n"));
 
-}
+// }
