@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     {
         clientlen = sizeof(clientaddr);
 
-        if ((connfd = accept(listenfd, (SA *)&clientaddr, &clientlen)) < 0)
+        if ((connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen)) < 0)
         {
             continue;
         }
@@ -186,9 +186,7 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
 {
 
     char buf[MAXBUF], line[MAXLINE];
-    rio_t server_rio;
-
-    rio_readinitb(&server_rio, clientfd);
+    ssize_t read_bytes;
 
     /* Send HTTP request line with HTTP/1.0 to server */
     sprintf(buf, "GET %s HTTP/1.0\r\n", server_path);
@@ -207,24 +205,17 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
     }
     while (strcmp(line, "\r\n"));
 
-    /* Receive server HTTP response */
-    printf("Server request headers:\n");
+    /* Receive server HTTP response and send to the client*/
     do
     {
-        Rio_readlineb(&server_rio, line, MAXLINE);
-        printf("%s", line);
+        read_bytes = Rio_readn(clientfd, buf, MAXBUF);
+        Rio_writen(connfd, buf, read_bytes);
 
-        /* Send HTTP response header to the client directly */
-        Rio_writen(connfd, line, strlen(line));
+        printf("Read bytes from server: %ld\n", read_bytes);
+        fflush(stdout);
     }
-    while (strcmp(line, "\r\n"));
-
-
-    /* Read content-length and allocate enough memory to hold the response body */
-
-    /* Send HTTP response body to the client via Rio_writen */
+    while (read_bytes == MAXBUF);
 }
-
 
 /* Read HTTP request headers */
 void read_headers(rio_t *rp)
