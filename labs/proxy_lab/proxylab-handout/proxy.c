@@ -5,7 +5,9 @@
 #define MAX_OBJECT_SIZE 102400
 
 /* You won't lose style points for including this long line in your code */
+/* This User-Agent header will lead to 302 FOUND error when access www.google.com, while the below curl User-Agent will return 200 OK */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
+// static const char *user_agent_hdr = "User-Agent: curl/7.81.0\r\n";
 
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
@@ -176,12 +178,12 @@ void parse_uri(char *uri, rl_t *rlp)
 /* Handle server */
 void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
 {
-
+    printf("%s", user_agent_hdr);
     char buf[MAXBUF], line[MAXLINE];
     ssize_t read_bytes;
     char contain_host = 0;
 
-    char *user_agent_name = "User-Agent:", *connection_name = "Connection:", *proxy_connection_name = "Proxy-Connection";
+    char *user_agent_name = "User-Agent", *connection_name = "Connection", *proxy_connection_name = "Proxy-Connection";
 
     /* Send HTTP request line with HTTP/1.0 to server */
     sprintf(buf, "GET %s HTTP/1.0\r\n", client_rlp->path);
@@ -217,11 +219,11 @@ void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
     Rio_writen(clientfd, buf, strlen(buf));
 
     /* Send Connection to server */
-    sprintf(buf, "%s close\r\n", connection_name);
+    sprintf(buf, "%s: close\r\n", connection_name);
     Rio_writen(clientfd, buf, strlen(buf));
 
     /* Send Proxy-Connection and \r\n to server */
-    sprintf(buf, "%s close\r\n\r\n", proxy_connection_name);
+    sprintf(buf, "%s: close\r\n\r\n", proxy_connection_name);
     Rio_writen(clientfd, buf, strlen(buf));
 
     /* Receive server HTTP response and send to the client*/
