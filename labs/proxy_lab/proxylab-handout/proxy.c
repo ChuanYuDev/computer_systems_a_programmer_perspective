@@ -9,10 +9,8 @@ static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64;
 
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
-void parse_uri(char *uri, char *host, char *hostname, char *port, char *path);
-
-void handle_server(int clientfd, int connfd, char *server_host, char *server_path, rio_t *client_rp);
-// void read_headers(rio_t *rp);
+void parse_uri(char *uri, rl_t *rlp);
+void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp);
 
 int main(int argc, char **argv)
 {
@@ -28,8 +26,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
         exit(0);
     }
-
-    // printf("%s", user_agent_hdr);
 
     /* Listen for incoming connections */
     if ((listenfd = open_listenfd(argv[1])) < 0)
@@ -64,8 +60,8 @@ int main(int argc, char **argv)
 void handle_client(int connfd)
 {
     char line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
-    char server_host[MAXLINE], server_hostname[MAXLINE], server_port[MAXLINE], server_path[MAXLINE];
     int clientfd;
+    rl_t client_rl;
     rio_t client_rio;
 
     rio_readinitb(&client_rio, connfd);
@@ -85,27 +81,27 @@ void handle_client(int connfd)
         return;
     }
 
-    parse_uri(uri, server_host, server_hostname, server_port, server_path);
-    printf("Server host: %s, hostname: %s, port: %s, path: %s\n", server_host, server_hostname, server_port, server_path);
+    parse_uri(uri, &client_rl);
+    print(&client_rl);
 
     /* If server hostname is "\0", send error to client, 400 Bad request */
-    if (server_hostname[0] == '\0')
+    if (client_rl.hostname[0] == '\0')
     {
-        client_error(connfd, server_hostname, "400", "Bad request", "Proxy can't find server hostname");
+        client_error(connfd, client_rl.hostname, "400", "Bad request", "Proxy can't find server hostname");
         return;
     }
 
     /* Establish connection to web server */
-    if ((clientfd = open_clientfd(server_hostname, server_port)) < 0)
+    if ((clientfd = open_clientfd(client_rl.hostname, client_rl.port)) < 0)
     {
         /* If open_clientfd failed, send message back to client */
-        client_error(connfd, server_host, "400", "Bad request", "Proxy can't connect to server");
+        client_error(connfd, client_rl.host, "400", "Bad request", "Proxy can't connect to server");
         return;
     }
 
-    printf("Connected to server %s:%s\n", server_hostname, server_port);
+    printf("Connected to server %s:%s\n", client_rl.hostname, client_rl.port);
 
-    handle_server(clientfd, connfd, server_host, server_path, &client_rio);
+    handle_server(clientfd, connfd, &client_rl, &client_rio);
 
     Close(clientfd);
 
@@ -124,8 +120,6 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
         "<hr><em>The proxy</em>\r\n", errnum, shortmsg, longmsg, cause
     );
 
-    // printf("%s", body);
-
     /* Print the HTTP response */
     sprintf(buf, "HTTP/1.0 %s %s\r\n", errnum, shortmsg);
     Rio_writen(fd, buf, strlen(buf));
@@ -142,17 +136,14 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
  * Parse uri
  * Separate hostname, port and path
  * If no port is provided, use the default port 80
- * 
- * host: hostname or hostname:port based on uri
  */
-void parse_uri(char *uri, char *host, char *hostname, char *port, char *path)
+void parse_uri(char *uri, rl_t *rlp)
 {
     char uri_copy[MAXLINE];
     char *hostname_ptr, *port_ptr, *path_ptr;
     char *double_slash = "://", *default_port = "80";
 
     strcpy(uri_copy, uri);
-    // printf("%s\n", uri_copy);
 
     hostname_ptr = strstr(uri_copy, double_slash);
 
@@ -163,27 +154,27 @@ void parse_uri(char *uri, char *host, char *hostname, char *port, char *path)
         hostname_ptr += strlen(double_slash);
     
     path_ptr = strstr(hostname_ptr, "/");
-    strcpy(path, path_ptr);
+    strcpy(rlp->path, path_ptr);
     *path_ptr = '\0';
 
-    strcpy(host, hostname_ptr);
+    strcpy(rlp->host, hostname_ptr);
 
     port_ptr = strstr(hostname_ptr, ":");
 
     if (!port_ptr)
-        strcpy(port, default_port);
+        strcpy(rlp->port, default_port);
     
     else
     {
-        strcpy(port, port_ptr + 1);
+        strcpy(rlp->port, port_ptr + 1);
         *port_ptr = '\0';
     }
 
-    strcpy(hostname, hostname_ptr);
+    strcpy(rlp->hostname, hostname_ptr);
 }
 
 /* Handle server */
-void handle_server(int clientfd, int connfd, char *server_host, char *server_path, rio_t *client_rp)
+void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
 {
 
     char buf[MAXBUF], line[MAXLINE];
@@ -193,7 +184,7 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
     char *user_agent_name = "User-Agent:", *connection_name = "Connection:", *proxy_connection_name = "Proxy-Connection";
 
     /* Send HTTP request line with HTTP/1.0 to server */
-    sprintf(buf, "GET %s HTTP/1.0\r\n", server_path);
+    sprintf(buf, "GET %s HTTP/1.0\r\n", client_rlp->path);
     Rio_writen(clientfd, buf, strlen(buf));
 
     /* Send HTTP request to server */
@@ -217,7 +208,7 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
 
     if (!contain_host)
     {
-        sprintf(buf, "Host: %s\r\n", server_host);
+        sprintf(buf, "Host: %s\r\n", client_rlp->host);
         Rio_writen(clientfd, buf, strlen(buf));
     }
 
@@ -244,16 +235,3 @@ void handle_server(int clientfd, int connfd, char *server_host, char *server_pat
     }
     while (read_bytes == MAXBUF);
 }
-
-/* Read HTTP request headers */
-// void read_headers(rio_t *rp)
-// {
-//     char line[MAXLINE];
-
-//     do
-//     {
-//         Rio_readlineb(rp, line, MAXLINE);
-//         printf("%s", line);
-//     } while (strcmp(line, "\r\n"));
-
-// }

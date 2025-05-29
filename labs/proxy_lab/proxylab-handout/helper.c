@@ -1,7 +1,14 @@
 #include "helper.h"
 
+/* Request line */
+void print(rl_t *rlp)
+{
+    printf("Request line host: %s, hostname: %s, port: %s, path: %s\n", rlp->host, rlp->hostname, rlp->port, rlp->path);
+}
+
 /* Our own error-handling functions */
-void unix_error(char *msg) /* Unix-style error */
+/* Unix-style error */
+void unix_error(char *msg) 
 {
     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
 }
@@ -77,12 +84,11 @@ int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t h
     return rc;
 }
 
-
 /* Rio (Robust I/O) package */
 /*
  * rio_readn - Robustly read n bytes (unbuffered)
  */
-ssize_t rio_readn(int fd, void *usrbuf, size_t n) 
+static ssize_t rio_readn(int fd, void *usrbuf, size_t n) 
 {
     size_t nleft = n;
     ssize_t nread;
@@ -123,7 +129,7 @@ ssize_t Rio_readn(int fd, void *usrptr, size_t n)
  * rio_writen - Robustly write n bytes (unbuffered)
  */
 
-ssize_t rio_writen(int fd, void *usrbuf, size_t n) 
+static ssize_t rio_writen(int fd, void *usrbuf, size_t n) 
 {
     size_t nleft = n;
     ssize_t nwritten;
@@ -166,11 +172,6 @@ void rio_readinitb(rio_t *rp, int fd)
     rp->rio_cnt = 0;  
     rp->rio_bufptr = rp->rio_buf;
 }
-
-// void Rio_readinitb(rio_t *rp, int fd)
-// {
-//     rio_readinitb(rp, fd);
-// } 
 
 /* 
  * rio_read - This is a wrapper for the Unix read() function that
@@ -228,7 +229,7 @@ static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n)
  *   0: EOF
  *  positive number: the number of bytes read (include '\n', exclude '\0')
  */
-ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+static ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
 {
     int n, rc;
     char c, *bufp = usrbuf;
@@ -331,15 +332,6 @@ int open_clientfd(char *hostname, char *port)
         return clientfd;
 }
 
-// int Open_clientfd(char *hostname, char *port) 
-// {
-//     int rc;
-
-//     if ((rc = open_clientfd(hostname, port)) < 0) 
-// 	unix_error("Open_clientfd error");
-//     return rc;
-// }
-
 /*  
  * open_listenfd - Open and return a listening socket on port. This
  *     function is reentrant and protocol-independent.
@@ -407,18 +399,3 @@ int open_listenfd(char *port)
 
     return listenfd;
 }
-
-// int Open_listenfd(char *port) 
-// {
-//     int rc;
-
-//     if ((rc = open_listenfd(port)) < 0)
-//     {
-//         unix_error("Open_listenfd error");
-
-//         /* Open_listenfd can terminate the program because the connection is not established */
-//         exit(0);
-//     }
-
-//     return rc;
-// }

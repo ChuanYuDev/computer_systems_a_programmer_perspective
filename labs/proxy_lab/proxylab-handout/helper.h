@@ -21,6 +21,11 @@
 
 typedef struct sockaddr SA;
 
+/* Misc constants */
+#define	MAXLINE	 8192  /* Max text line length */
+#define MAXBUF   8192  /* Max I/O buffer size */
+#define LISTENQ  1024  /* Second argument to listen() */
+
 /* Internal buffer for robust I/O package */
 #define RIO_BUFSIZE 8192
 typedef struct
@@ -31,19 +36,28 @@ typedef struct
     char rio_buf[RIO_BUFSIZE];  /* Internal buffer */
 } rio_t;
 
-/* Misc constants */
-#define	MAXLINE	 8192  /* Max text line length */
-#define MAXBUF   8192  /* Max I/O buffer size */
-#define LISTENQ  1024  /* Second argument to listen() */
+/* Request line */
+#define RL_BUFSIZE 1024
+typedef struct
+{
+    char host[RL_BUFSIZE];      /* host: hostname or hostname:port based on uri */
+    char hostname[RL_BUFSIZE];
+    char port[RL_BUFSIZE];
+    char path[RL_BUFSIZE];
+}rl_t;
+
+void print(rl_t *rlp);
 
 /* Our own error-handling functions */
-// void unix_error(char *msg);
-// void gai_error(int code ,char *msg);
+void unix_error(char *msg);
+void gai_error(int code ,char *msg);
+void app_error(char *msg);
 
 /* Unix I/O wrappers */
 int Close(int fd);
 
 /* Sockets interface wrappers */
+int Listen(int fd, int backlog);
 int Accept(int s, struct sockaddr *addr, socklen_t *addrlen);
 
 /* Protocol independent wrappers */
@@ -52,17 +66,13 @@ int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t h
 
 /* Rio (Robust I/O) package */
 ssize_t Rio_readn(int fd, void *usrptr, size_t n);
-// ssize_t rio_writen(int fd, void *usrbuf, size_t n);
 ssize_t Rio_writen(int fd, void *usrbuf, size_t n);
 
 void rio_readinitb(rio_t *rp, int fd);
-// void Rio_readinitb(rio_t *rp, int fd);
 ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
 
 /* Reentrant protocol-independent client/server helpers */
 int open_clientfd(char *hostname, char *port);
-
 int open_listenfd(char *port);
-// int Open_listenfd(char *port);
 
 #endif /* __HELPER_H__ */
