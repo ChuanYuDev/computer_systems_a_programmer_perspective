@@ -11,6 +11,7 @@
     - [Part I: implementing a sequential web proxy](#part-i-implementing-a-sequential-web-proxy)
     - [Part II: dealing with multiple concurrent requests](#part-ii-dealing-with-multiple-concurrent-requests)
     - [Part III: caching web objects](#part-iii-caching-web-objects)
+    - [TO DO](#to-do)
 
 ## Introduction
 - Students implement a concurrent caching Web proxy that sits between their browser and the rest of the World Wide Web
@@ -43,20 +44,55 @@
     1. Add error message, return original rc
     1. Application level, based on rc, do some actions
 
-- TO DO:
-    - `request_line_t` struct type?
+- Result:
 
-    - Proxy ignore SIGPIPE signal (page 964)?
-        - `write` return EPIPE errors?
-    
-    - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
-        - Proxy should not terminate due to this error
-
-    - Tiny error: Rio_writen error: Connection reset by peer?
-        - Only appear once?
-
-    - `line:netp:doit:parserequest` (`doit` in tiny.c) note meaning?
+    ```
+    *** Basic ***
+    Starting tiny on 15021
+    Starting proxy on 24858
+    1: home.html
+    Fetching ./tiny/home.html into ./.proxy using the proxy
+    Fetching ./tiny/home.html into ./.noproxy directly from Tiny
+    Comparing the two files
+    Success: Files are identical.
+    2: csapp.c
+    Fetching ./tiny/csapp.c into ./.proxy using the proxy
+    Fetching ./tiny/csapp.c into ./.noproxy directly from Tiny
+    Comparing the two files
+    Success: Files are identical.
+    3: tiny.c
+    Fetching ./tiny/tiny.c into ./.proxy using the proxy
+    Fetching ./tiny/tiny.c into ./.noproxy directly from Tiny
+    Comparing the two files
+    Success: Files are identical.
+    4: godzilla.jpg
+    Fetching ./tiny/godzilla.jpg into ./.proxy using the proxy
+    Fetching ./tiny/godzilla.jpg into ./.noproxy directly from Tiny
+    Comparing the two files
+    Success: Files are identical.
+    5: tiny
+    Fetching ./tiny/tiny into ./.proxy using the proxy
+    Fetching ./tiny/tiny into ./.noproxy directly from Tiny
+    Comparing the two files
+    Success: Files are identical.
+    Killing tiny and proxy
+    basicScore: 40/40
+    ```
 
 ### Part II: dealing with multiple concurrent requests
 
 ### Part III: caching web objects
+
+### TO DO:
+- Thread safe `printf` function?
+
+- Proxy ignore SIGPIPE signal (page 964)?
+    - `write` return EPIPE errors?
+
+- Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
+    - Proxy should not terminate due to this error
+
+- Tiny error: Rio_writen error: Connection reset by peer?
+    - Only appear once?
+
+- `line:netp:doit:parserequest` (`doit` in tiny.c) note meaning?
