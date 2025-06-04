@@ -2,7 +2,7 @@
 #include "sbuf.h"
 
 /* Create an empty, bounded, shared FIFO buffer with n slots */
-void sbuf_int(sbuf_t *sp, int n)
+void sbuf_init(sbuf_t *sp, int n)
 {
     sp->buf = Calloc(n, sizeof(int));
     sp->n = n;
@@ -25,7 +25,8 @@ void sbuf_insert(sbuf_t *sp, int item)
     P(&sp->slots);
     P(&sp->mutex);
 
-    sp->rear = (++sp->rear) % sp->n;
+    ++sp->rear;
+    sp->rear %= sp->n;
     sp->buf[sp->rear] = item;
 
     V(&sp->mutex);
@@ -40,7 +41,8 @@ int sbuf_remove(sbuf_t *sp)
     P(&sp->items);
     P(&sp->mutex);
 
-    sp->front = (++sp->front) % sp->n;
+    ++sp->front;
+    sp->front %= sp->n;
     item = sp->buf[sp->front];
 
     V(&sp->mutex);

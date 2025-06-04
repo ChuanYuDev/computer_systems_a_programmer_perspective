@@ -22,11 +22,14 @@ all: proxy
 helper.o: helper.c helper.h
 	$(CC) $(CFLAGS) -c helper.c
 
-proxy.o: proxy.c helper.h
+sbuf.o: sbuf.c sbuf.h
+	$(CC) $(CFLAGS) -c sbuf.c
+
+proxy.o: proxy.c helper.h sbuf.h
 	$(CC) $(CFLAGS) -c proxy.c
 
-proxy: proxy.o helper.o
-	$(CC) $(CFLAGS) proxy.o helper.o -o proxy $(LDFLAGS)
+proxy: proxy.o helper.o sbuf.o
+	$(CC) $(CFLAGS) proxy.o helper.o sbuf.o -o proxy $(LDFLAGS)
 
 # Creates a tarball in ../proxylab-handin.tar that you can then
 # hand in. DO NOT MODIFY THIS!

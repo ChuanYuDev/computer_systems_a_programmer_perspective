@@ -1,4 +1,8 @@
 #include "helper.h"
+#include "sbuf.h"
+
+#define N_THERADS 4
+#define SBUF_SIZE 16
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -9,10 +13,13 @@
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 // static const char *user_agent_hdr = "User-Agent: curl/7.81.0\r\n";
 
+void *thread(void *vargp);
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 void parse_uri(char *uri, rl_t *rlp);
 void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp);
+
+sbuf_t sbuf;
 
 int main(int argc, char **argv)
 {
@@ -22,6 +29,8 @@ int main(int argc, char **argv)
 
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
+
+    pthread_t tid;
 
     if (argc != 2)
     {
@@ -35,6 +44,11 @@ int main(int argc, char **argv)
         /* Open_listenfd can terminate the program because the connection is not established */
         exit(0);
     }
+
+    sbuf_init(&sbuf, SBUF_SIZE);
+
+    for (int i = 0; i < N_THERADS; ++i)
+        Pthread_create(&tid, thread, NULL);
 
     while(1)
     {
@@ -50,12 +64,28 @@ int main(int argc, char **argv)
             printf("\nAccepted client connection from %s:%s\n", client_hostname, client_port);
         }
 
-        handle_client(connfd);
+        sbuf_insert(&sbuf, connfd);
 
-        Close(connfd);
+        // handle_client(connfd);
+
+        // Close(connfd);
     }
 
     return 0;
+}
+
+void *thread(void *vargp)
+{
+    int connfd;
+
+    Pthread_detach(pthread_self());
+
+    while(1)
+    {
+        connfd = sbuf_remove(&sbuf); 
+        handle_client(connfd);
+        Close(connfd);
+    }
 }
 
 /* Handle HTTP request */
