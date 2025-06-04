@@ -111,6 +111,16 @@ int Pthread_create(pthread_t *tidp, void * (*routine)(void *), void *argp)
     return rc;
 }
 
+int Pthread_detach(pthread_t tid)
+{
+    int rc;
+
+    if ((rc = pthread_detach(tid)) != 0)
+        posix_error(rc, "Pthread_detach error");
+    
+    return rc;
+}
+
 /* POSIX semaphore wrappers */
 int Sem_init(sem_t *sem, unsigned int value)
 {

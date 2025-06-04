@@ -84,16 +84,9 @@
 ### Part III: caching web objects
 
 ### TO DO:
-- `sbuf` package
-
-    ```c
-    (++sp->rear) % (sp->n)
-    ```
-    - When `sp->rear` is out of `int` boundary, `sp->rear` will be negative, in C, (-3) % 4 = -3
-    - The index will be negative, how to handle?
-
 - Error handling
     - If `P(v)` error, what should I do?
+    - If `Pthread_detach` error, what should I do?
 
 - Proxy ignore SIGPIPE signal (page 964)?
     - `write` return EPIPE errors?

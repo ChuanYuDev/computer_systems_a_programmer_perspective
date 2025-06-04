@@ -73,6 +73,9 @@ int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hi
 int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 
 /* Pthreads thread control wrappers */
+int Pthread_create(pthread_t *tidp, void * (*routine)(void *), void *argp);
+int Pthread_detach(pthread_t tid);
+
 /* POSIX semaphore wrappers */
 int Sem_init(sem_t *sem, unsigned int value);
 int P(sem_t *sem);
