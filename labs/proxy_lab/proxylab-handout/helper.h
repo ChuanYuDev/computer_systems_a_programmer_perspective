@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <pthread.h>
+#include <semaphore.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -51,10 +54,15 @@ void print(rl_t *rlp);
 /* Our own error-handling functions */
 void unix_error(char *msg);
 void gai_error(int code ,char *msg);
+void posix_error(int code, char *msg);
+
 void app_error(char *msg);
 
 /* Unix I/O wrappers */
 int Close(int fd);
+
+/* Dynamic storage allocation wrappers */
+void *Calloc(size_t nmemb, size_t size);
 
 /* Sockets interface wrappers */
 int Listen(int fd, int backlog);
@@ -63,6 +71,12 @@ int Accept(int s, struct sockaddr *addr, socklen_t *addrlen);
 /* Protocol independent wrappers */
 int Getaddrinfo(const char *name, const char *service, const struct addrinfo *hints, struct addrinfo **res);
 int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
+
+/* Pthreads thread control wrappers */
+/* POSIX semaphore wrappers */
+int Sem_init(sem_t *sem, unsigned int value);
+int P(sem_t *sem);
+int V(sem_t *sem);
 
 /* Rio (Robust I/O) package */
 ssize_t Rio_readn(int fd, void *usrptr, size_t n);

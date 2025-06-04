@@ -178,7 +178,6 @@ void parse_uri(char *uri, rl_t *rlp)
 /* Handle server */
 void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
 {
-    printf("%s", user_agent_hdr);
     char buf[MAXBUF], line[MAXLINE];
     ssize_t read_bytes;
     char contain_host = 0;

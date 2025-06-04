@@ -18,6 +18,11 @@ void gai_error(int code ,char *msg)
     fprintf(stderr, "%s: %s\n", msg, gai_strerror(code));
 }
 
+void posix_error(int code, char *msg)
+{
+    fprintf(stderr, "%s: %s\n", msg, strerror(code));
+}
+
 void app_error(char *msg)
 {
     fprintf(stderr, "%s\n", msg);
@@ -36,6 +41,17 @@ int Close(int fd)
     }
 
     return rc;
+}
+
+/* Dynamic storage allocation wrappers */
+void *Calloc(size_t nmemb, size_t size)
+{
+    void *p;
+
+    if ((p = calloc(nmemb, size)) == NULL)
+        unix_error("Calloc error");
+    
+    return p;
 }
 
 /* Sockets interface wrappers */
@@ -80,6 +96,48 @@ int Getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t h
 
     if ((rc = getnameinfo(sa, salen, host, hostlen, serv, servlen, flags)) != 0) 
         gai_error(rc, "Getnameinfo error");
+    
+    return rc;
+}
+
+/* Pthreads thread control wrappers */
+int Pthread_create(pthread_t *tidp, void * (*routine)(void *), void *argp)
+{
+    int rc;
+
+    if ((rc = pthread_create(tidp, NULL, routine, argp)) != 0)
+        posix_error(rc, "Pthread_create error");
+    
+    return rc;
+}
+
+/* POSIX semaphore wrappers */
+int Sem_init(sem_t *sem, unsigned int value)
+{
+    int rc;
+
+    if ((rc = sem_init(sem, 0, value)) < 0)
+        unix_error("Sem_init error");
+    
+    return rc;
+}
+
+int P(sem_t *sem)
+{
+    int rc;
+
+    if ((rc = sem_wait(sem)) < 0)
+        unix_error("P error");
+    
+    return rc;
+}
+
+int V(sem_t *sem)
+{
+    int rc;
+
+    if ((rc = sem_post(sem)) < 0)
+        unix_error("Q error");
     
     return rc;
 }

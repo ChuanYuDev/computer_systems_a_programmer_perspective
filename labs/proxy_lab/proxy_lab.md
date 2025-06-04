@@ -84,7 +84,16 @@
 ### Part III: caching web objects
 
 ### TO DO:
-- Thread safe `printf` function?
+- `sbuf` package
+
+    ```c
+    (++sp->rear) % (sp->n)
+    ```
+    - When `sp->rear` is out of `int` boundary, `sp->rear` will be negative, in C, (-3) % 4 = -3
+    - The index will be negative, how to handle?
+
+- Error handling
+    - If `P(v)` error, what should I do?
 
 - Proxy ignore SIGPIPE signal (page 964)?
     - `write` return EPIPE errors?

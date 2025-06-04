@@ -188,3 +188,5 @@
 
 ## Remaining problems
 - How to handle add too many jobs? Refer to `tshref`?
+
+- Signal handler should not use `fprintf` function which is not async-signal-safe, how to correct them?
