@@ -65,10 +65,6 @@ int main(int argc, char **argv)
         }
 
         sbuf_insert(&sbuf, connfd);
-
-        // handle_client(connfd);
-
-        // Close(connfd);
     }
 
     return 0;

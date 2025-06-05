@@ -80,13 +80,97 @@
     ```
 
 ### Part II: dealing with multiple concurrent requests
+- Use prethreading to deal with multiple concurrent requests
+
+- Result:
+
+    ```
+    *** Concurrency ***
+    Starting tiny on port 28477
+    Starting proxy on port 17211
+    Starting the blocking NOP server on port 11448
+    Trying to fetch a file from the blocking nop-server
+    Fetching ./tiny/home.html into ./.noproxy directly from Tiny
+    Fetching ./tiny/home.html into ./.proxy using the proxy
+    Checking whether the proxy fetch succeeded
+    Success: Was able to fetch tiny/home.html from the proxy.
+    Killing tiny, proxy, and nop-server
+    concurrencyScore: 15/15
+    ```
 
 ### Part III: caching web objects
+
+- Features:
+    - The maximum amount of data your proxy will ever use is:
+
+        ```
+        MAX_CACHE_SIZE + T * MAX_OBJECT_SIZE
+        ```
+        - This means the maximum cache size is still `MAX_CACHE_SIZE`
+        - At the same time, there are `T` actice connections and they accumulate `MAX_OBJECT_SIZE` bytes data in the buffer
+
+    - First readers-writers problem
+    - Use `{hostname}:{port}{path}` as key
+    - Cache structure:
+
+        ```c
+        typedef struct
+        {
+            cache_t *next;
+        } cache_t;
+        ```
+
+    - Object structure
+
+        ```c
+        typedef struct
+        {
+            char *
+            object_t *next;
+        } object_t;
+        ```
+
+- Logic:
+    - Multiple readers can access the cache (cache unchanged)
+    - After read, return pointer to the item
+
+    - If pointer == NULL (No cache)
+        - `malloc` `MAX_OBJECT_SIZE` buffer `object_buf`
+        - Connect to server
+
+        - Read `MAXBUF` object into `buf`
+            - Serve object to client
+
+            - If `read_bytes` + `object_size` > `MAX_OBJECT_SIZE`
+                - Discard buffer (`free`)
+                - Abort cache process
+
+            - If `read_bytes` + `object_size` <= `MAX_OBJECT_SIZE`
+                - Append `buf` to `object_buf`
+
+                    ```
+                    memcpy(object_buf + object size, buf, read_bytes)
+                    ```
+                
+                - Repeat read until EOF
+
+        - If cache size + object size <= `MAX_CACHE_SIZE`
+            - Store object into cache
+        
+        - If cache size + object size > `MAX_CACHE_SIZE`
+            - Evict some the least used objects until size <= `MAX_CACHE_SIZE`
+            - Store object into cache
+    
+    - If point != NULL (In cache)
+        - Get cached object
+        - Change cache organization to implement LRU
+        - Serve object to client
 
 ### TO DO:
 - Error handling
     - If `P(v)` error, what should I do?
     - If `Pthread_detach` error, what should I do?
+    - Terminate thread?
 
 - Proxy ignore SIGPIPE signal (page 964)?
     - `write` return EPIPE errors?
