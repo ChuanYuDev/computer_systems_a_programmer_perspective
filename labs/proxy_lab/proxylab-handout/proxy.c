@@ -113,7 +113,7 @@ void handle_client(int connfd)
     }
 
     parse_uri(uri, &client_rl);
-    print_rl(&client_rl);
+    rl_print(&client_rl);
 
     /* If server hostname is "\0", send error to client, 400 Bad request */
     if (client_rl.hostname[0] == '\0')

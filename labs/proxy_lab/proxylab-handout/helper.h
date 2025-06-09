@@ -96,8 +96,9 @@ void rio_readinitb(rio_t *rp, int fd);
 ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
 
 /* Request line helper function */
-void print_rl(request_line_t *rlp);
-void copy_rl(request_line_t *dest, request_line_t *src);
+void rl_print(request_line_t *rlp);
+void rl_copy(request_line_t *dest, request_line_t *src);
+int is_rl_equal(request_line_t *rl1, request_line_t *rl2);
 
 /* Reentrant protocol-independent client/server helpers */
 int open_clientfd(char *hostname, char *port);

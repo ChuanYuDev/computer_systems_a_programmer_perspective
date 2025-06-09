@@ -4,15 +4,15 @@
 #include "helper.h"
 
 #define KEY_BUFSIZE 8192
-typedef struct
+typedef struct obj_type
 {
     void *buf;
-    request_line_t rl;        /* Use copy_rl and is_rl_equal function to compare object */
+    request_line_t rl;  /* Use rl_copy and is_rl_equal function to compare object */
 
-    obj_t *pre;
-    obj_t *next;
+    struct obj_type *pre;
+    struct obj_type *next;
 
-    int size;
+    int size;   /* Limited by MAX_OBJECT_SIZE */
 } obj_t;
 
 typedef struct
@@ -20,7 +20,7 @@ typedef struct
     obj_t *first_obj_ptr;
     obj_t *last_obj_ptr;
 
-    int size;
+    int size;   /* Limited by MAX_CACHE_SIZE */
 
     /* For first readers-writers problem */
     int read_cnt;   /* Initially = 0 */           
