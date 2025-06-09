@@ -41,7 +41,7 @@ typedef struct
     char rio_buf[RIO_BUFSIZE];  /* Internal buffer */
 } rio_t;
 
-/* Request line */
+/* Request line structure */
 #define RL_BUFSIZE 1024
 typedef struct
 {
@@ -49,9 +49,7 @@ typedef struct
     char hostname[RL_BUFSIZE];
     char port[RL_BUFSIZE];
     char path[RL_BUFSIZE];
-}rl_t;
-
-void print(rl_t *rlp);
+}request_line_t;
 
 /* Our own error-handling functions */
 void unix_error(char *msg);
@@ -96,6 +94,10 @@ ssize_t Rio_writen(int fd, void *usrbuf, size_t n);
 
 void rio_readinitb(rio_t *rp, int fd);
 ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen);
+
+/* Request line helper function */
+void print_rl(request_line_t *rlp);
+void copy_rl(request_line_t *dest, request_line_t *src);
 
 /* Reentrant protocol-independent client/server helpers */
 int open_clientfd(char *hostname, char *port);

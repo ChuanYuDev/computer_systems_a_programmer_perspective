@@ -1,11 +1,5 @@
 #include "helper.h"
 
-/* Request line */
-void print(rl_t *rlp)
-{
-    printf("Request line host: %s, hostname: %s, port: %s, path: %s\n", rlp->host, rlp->hostname, rlp->port, rlp->path);
-}
-
 /* Our own error-handling functions */
 /* Unix-style error */
 void unix_error(char *msg) 
@@ -370,6 +364,22 @@ ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen)
 
     return rc;
 } 
+
+/* Request line helper function */
+void print_rl(request_line_t *rlp)
+{
+    printf("Request line host: %s, hostname: %s, port: %s, path: %s\n", rlp->host, rlp->hostname, rlp->port, rlp->path);
+}
+
+void copy_rl(request_line_t *dest, request_line_t *src)
+{
+    memcpy(dest, src, sizeof(request_line_t));
+}
+
+int is_rl_equal(request_line_t *rl1, request_line_t *rl2)
+{
+    !strcmp(rl1->hostname, rl2->hostname) && !strcmp(rl1->port, rl2->port) && !strcmp(rl1->path, rl2->path);
+}
 
 /* Reentrant protocol-independent client/server helpers */
 /*

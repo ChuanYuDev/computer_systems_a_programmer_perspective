@@ -16,8 +16,8 @@ static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64;
 void *thread(void *vargp);
 void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
-void parse_uri(char *uri, rl_t *rlp);
-void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp);
+void parse_uri(char *uri, request_line_t *rlp);
+void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *client_rp);
 void sigint_handler(int sig);
 
 sbuf_t sbuf;
@@ -92,7 +92,7 @@ void handle_client(int connfd)
 {
     char line[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
     int clientfd;
-    rl_t client_rl;
+    request_line_t client_rl;
     rio_t client_rio;
 
     rio_readinitb(&client_rio, connfd);
@@ -113,7 +113,7 @@ void handle_client(int connfd)
     }
 
     parse_uri(uri, &client_rl);
-    print(&client_rl);
+    print_rl(&client_rl);
 
     /* If server hostname is "\0", send error to client, 400 Bad request */
     if (client_rl.hostname[0] == '\0')
@@ -168,7 +168,7 @@ void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longm
  * Separate hostname, port and path
  * If no port is provided, use the default port 80
  */
-void parse_uri(char *uri, rl_t *rlp)
+void parse_uri(char *uri, request_line_t *rlp)
 {
     char uri_copy[MAXLINE];
     char *hostname_ptr, *port_ptr, *path_ptr;
@@ -205,7 +205,7 @@ void parse_uri(char *uri, rl_t *rlp)
 }
 
 /* Handle server */
-void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
+void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *client_rp)
 {
     char buf[MAXBUF], line[MAXLINE];
     ssize_t read_bytes;

@@ -111,6 +111,22 @@
 
     ![](./images/cache_data_structure.png)
 
+    - Object structure
+
+        ```c
+        typedef struct
+        {
+            void *buf;
+            int size;
+            char *key;      /* Use {hostname}:{port}{path} as key */
+
+            obj_t *pre;
+            obj_t *next;
+        } obj_t;
+        ```
+        - `free` function: free `obj.buf` then free `obj`
+
+
     - Cache structure:
 
         ```c
@@ -130,22 +146,7 @@
         - `read`, `write` function
             - First readers-writers problem
 
-    - Object structure
-
-        ```c
-        typedef struct
-        {
-            char *buf;
-            int size;
-            char *key;      /* Use {hostname}:{port}{path} as key */
-
-            obj_t *pre;
-            obj_t *next;
-        } obj_t;
-        ```
-        - `free` function
-
-- Logic:
+- Pseudo code:
     - Multiple readers can access the cache (cache unchanged)
     - After read, return pointer to the item
 
@@ -173,7 +174,8 @@
                 
                 - Repeat read until EOF
 
-                - Init `object_t` based on `object_buf` and object size
+                - Dynamically Allocate `obj_t` and `obj.buf`
+                    - Init `obj.buf` based on `object_buf` and object size
 
         - If cache size + object size <= `MAX_CACHE_SIZE`
             - Store object into cache
