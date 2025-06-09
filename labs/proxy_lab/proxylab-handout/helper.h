@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <signal.h>
+
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -57,6 +59,13 @@ void gai_error(int code ,char *msg);
 void posix_error(int code, char *msg);
 
 void app_error(char *msg);
+
+/* Process control wrappers */
+int Kill(pid_t pid, int signum);
+
+/* Signal wrappers */
+typedef void handler_t(int);
+handler_t *Signal(int signum, handler_t *handler);
 
 /* Unix I/O wrappers */
 int Close(int fd);

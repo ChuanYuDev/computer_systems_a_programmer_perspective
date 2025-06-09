@@ -28,6 +28,36 @@ void app_error(char *msg)
     fprintf(stderr, "%s\n", msg);
 }
 
+/* Process control wrappers */
+
+int Kill(pid_t pid, int signum) 
+{
+    int rc;
+
+    if ((rc = kill(pid, signum)) < 0)
+        unix_error("Kill error");
+    
+    return rc;
+}
+
+/* Signal wrappers */
+/*
+ * Signal - wrapper for the sigaction function
+ */
+handler_t *Signal(int signum, handler_t *handler) 
+{
+    struct sigaction action, old_action;
+
+    action.sa_handler = handler;  
+    sigemptyset(&action.sa_mask); /* block sigs of type being handled */
+    action.sa_flags = SA_RESTART; /* restart syscalls if possible */
+
+    if (sigaction(signum, &action, &old_action) < 0)
+        unix_error("Signal error");
+
+    return (old_action.sa_handler);
+}
+
 /* Unix I/O wrappers */
 int Close(int fd)
 {

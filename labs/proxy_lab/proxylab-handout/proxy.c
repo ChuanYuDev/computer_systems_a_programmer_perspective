@@ -18,6 +18,7 @@ void handle_client(int connfd);
 void client_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg);
 void parse_uri(char *uri, rl_t *rlp);
 void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp);
+void sigint_handler(int sig);
 
 sbuf_t sbuf;
 
@@ -37,6 +38,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "usage: %s <port>\n", argv[0]);
         exit(0);
     }
+
+    Signal(SIGINT,  sigint_handler);   /* ctrl-c */
 
     /* Listen for incoming connections */
     if ((listenfd = open_listenfd(argv[1])) < 0)
@@ -261,4 +264,20 @@ void handle_server(int clientfd, int connfd, rl_t *client_rlp, rio_t *client_rp)
         fflush(stdout);
     }
     while (read_bytes == MAXBUF);
+}
+
+void sigint_handler(int sig) 
+{
+    int olderrno = errno;
+
+    sbuf_deinit(&sbuf);
+
+    printf("Kill proxy process group, process group id: %d\n", getpgrp());
+    fflush(stdout);
+
+    // Kill(-getpgrp(), SIGKILL);
+    Kill(getpid(), SIGKILL);
+
+    errno = olderrno;
+    return;
 }

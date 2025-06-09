@@ -99,50 +99,69 @@
     ```
 
 ### Part III: caching web objects
+- The maximum amount of data your proxy will ever use is:
 
-- Features:
-    - The maximum amount of data your proxy will ever use is:
+    ```
+    MAX_CACHE_SIZE + T * MAX_OBJECT_SIZE
+    ```
+    - This means the maximum cache size is still `MAX_CACHE_SIZE`
+    - At the same time, there are `T` actice connections and they accumulate `MAX_OBJECT_SIZE` bytes data in the buffer
 
-        ```
-        MAX_CACHE_SIZE + T * MAX_OBJECT_SIZE
-        ```
-        - This means the maximum cache size is still `MAX_CACHE_SIZE`
-        - At the same time, there are `T` actice connections and they accumulate `MAX_OBJECT_SIZE` bytes data in the buffer
+- Data structure
 
-    - First readers-writers problem
-    - Use `{hostname}:{port}{path}` as key
+    ![](./images/cache_data_structure.png)
+
     - Cache structure:
 
         ```c
         typedef struct
         {
-            cache_t *next;
+            int size;
+            obj_t *first_obj_ptr;
+            obj_t *last_obj_ptr;
+
+            int read_cnt;           /* For first readers-writers problem */
+            sem_t mutex, w;
         } cache_t;
         ```
+        - `init` function 
+            - Initialize `read_cnt`, `mutex`, `w`
+
+        - `read`, `write` function
+            - First readers-writers problem
 
     - Object structure
 
         ```c
         typedef struct
         {
-            char *
-            object_t *next;
-        } object_t;
+            char *buf;
+            int size;
+            char *key;      /* Use {hostname}:{port}{path} as key */
+
+            obj_t *pre;
+            obj_t *next;
+        } obj_t;
         ```
+        - `free` function
 
 - Logic:
     - Multiple readers can access the cache (cache unchanged)
     - After read, return pointer to the item
 
     - If pointer == NULL (No cache)
-        - `malloc` `MAX_OBJECT_SIZE` buffer `object_buf`
+        - Assign `MAX_OBJECT_SIZE` buffer `object_buf`
+
+            ```c
+            char object_buf[MAX_OBJECT_SIZE]; 
+            ```
+
         - Connect to server
 
         - Read `MAXBUF` object into `buf`
             - Serve object to client
 
             - If `read_bytes` + `object_size` > `MAX_OBJECT_SIZE`
-                - Discard buffer (`free`)
                 - Abort cache process
 
             - If `read_bytes` + `object_size` <= `MAX_OBJECT_SIZE`
@@ -154,11 +173,13 @@
                 
                 - Repeat read until EOF
 
+                - Init `object_t` based on `object_buf` and object size
+
         - If cache size + object size <= `MAX_CACHE_SIZE`
             - Store object into cache
         
         - If cache size + object size > `MAX_CACHE_SIZE`
-            - Evict some the least used objects until size <= `MAX_CACHE_SIZE`
+            - Evict some the least recently used (LRU) objects until size <= `MAX_CACHE_SIZE`
             - Store object into cache
     
     - If point != NULL (In cache)
@@ -177,6 +198,74 @@
 
 - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
     - Proxy should not terminate due to this error
+
+
+- `free sbuf` in `SIGINT` signal handler
+    - Only consider to terminate the process with `ctrl-c` (`SIGINT`)
+    - Is there any better method?
+    - Run the program with Valgrind, we succuessfully eliminate the `sbuf` possible lost problem, but there are other possible lost?
+
+        ```
+        valgrind --leak-check=full --show-leak-kinds=all ./proxy 2702
+        ==274227== Memcheck, a memory error detector
+        ==274227== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+        ==274227== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+        ==274227== Command: ./proxy 2702
+        ==274227== 
+        ^CKill proxy process group, process group id: 274227
+        ==274227== 
+        ==274227== HEAP SUMMARY:
+        ==274227==     in use at exit: 3,672 bytes in 6 blocks
+        ==274227==   total heap usage: 12 allocs, 6 frees, 8,564 bytes allocated
+        ==274227== 
+        ==274227== 1,024 bytes in 1 blocks are still reachable in loss record 1 of 3
+        ==274227==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+        ==274227==    by 0x48E1BA3: _IO_file_doallocate (filedoalloc.c:101)
+        ==274227==    by 0x48F0CDF: _IO_doallocbuf (genops.c:347)
+        ==274227==    by 0x48EFF5F: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:744)
+        ==274227==    by 0x48EE6D4: _IO_new_file_xsputn (fileops.c:1243)
+        ==274227==    by 0x48EE6D4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+        ==274227==    by 0x48D814C: outstring_func (vfprintf-internal.c:239)
+        ==274227==    by 0x48D814C: __vfprintf_internal (vfprintf-internal.c:1263)
+        ==274227==    by 0x48C379E: printf (printf.c:33)
+        ==274227==    by 0x10B2CD: sigint_handler (proxy.c:275)
+        ==274227==    by 0x48A551F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+        ==274227==    by 0x498A45C: accept (accept.c:26)
+        ==274227==    by 0x10B67F: Accept (helper.c:102)
+        ==274227==    by 0x10A7E0: main (proxy.c:60)
+        ==274227== 
+        ==274227== 1,088 bytes in 4 blocks are possibly lost in loss record 2 of 3
+        ==274227==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+        ==274227==    by 0x40147D9: calloc (rtld-malloc.h:44)
+        ==274227==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+        ==274227==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+        ==274227==    by 0x48F87B4: allocate_stack (allocatestack.c:430)
+        ==274227==    by 0x48F87B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+        ==274227==    by 0x10B82A: Pthread_create (helper.c:138)
+        ==274227==    by 0x10A7A8: main (proxy.c:54)
+        ==274227== 
+        ==274227== 1,560 bytes in 1 blocks are still reachable in loss record 3 of 3
+        ==274227==    at 0x48487A9: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+        ==274227==    by 0x49A6D76: make_request (check_pf.c:235)
+        ==274227==    by 0x49A6D76: __check_pf (check_pf.c:329)
+        ==274227==    by 0x496EB77: getaddrinfo (getaddrinfo.c:2347)
+        ==274227==    by 0x10B70F: Getaddrinfo (helper.c:114)
+        ==274227==    by 0x10BFBD: open_listenfd (helper.c:453)
+        ==274227==    by 0x10A751: main (proxy.c:45)
+        ==274227== 
+        ==274227== LEAK SUMMARY:
+        ==274227==    definitely lost: 0 bytes in 0 blocks
+        ==274227==    indirectly lost: 0 bytes in 0 blocks
+        ==274227==      possibly lost: 1,088 bytes in 4 blocks
+        ==274227==    still reachable: 2,584 bytes in 2 blocks
+        ==274227==         suppressed: 0 bytes in 0 blocks
+        ==274227== 
+        ==274227== For lists of detected and suppressed errors, rerun with: -s
+        ==274227== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+        Killed
+        ```
+        - Why possibly lost
+        - May refer to https://stackoverflow.com/questions/3840582/valgrind-still-reachable-leak-detected-by-valgrind, but the pointer to `struct addrinfo` is discarded, why is still reachable?
 
 - Tiny error: Rio_writen error: Connection reset by peer?
     - Only appear once?
