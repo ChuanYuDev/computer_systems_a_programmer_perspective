@@ -188,7 +188,21 @@ void cache_evict_last(cache_t *cache_ptr)
     P(&cache_ptr->w);
 
     /* Critical section, writing happens */
-    // TO DO: evict obj_ptr
+    if (!cache_ptr->last_obj_ptr)
+        return;
+
+    obj_t *last_obj_ptr = cache_ptr->last_obj_ptr;
+    
+    if (last_obj_ptr->pre)
+        last_obj_ptr->pre->next = NULL;
+    else
+        cache_ptr->first_obj_ptr = NULL;
+
+    cache_ptr->last_obj_ptr = last_obj_ptr->pre;
+    cache_ptr->size -= last_obj_ptr->size;
+
+    obj_deinit(last_obj_ptr);
+
     /* Critical section, writing ends */
 
     V(&cache_ptr->w);
@@ -216,9 +230,12 @@ void cache_insert(cache_t *cache_ptr, obj_t *obj_ptr)
     {
         cache_ptr->first_obj_ptr->pre = obj_ptr;
 
-        if (!cache_ptr->first_obj_ptr->next)
-            cache_ptr->last_obj_ptr = cache_ptr->first_obj_ptr;
+        /* No need to assign, if first object next is NULL, last_obj_ptr is already first_obj_ptr */
+        // if (!cache_ptr->first_obj_ptr->next)
+        //     cache_ptr->last_obj_ptr = cache_ptr->first_obj_ptr;
     }
+    else
+        cache_ptr->last_obj_ptr = obj_ptr;
 
     cache_ptr->first_obj_ptr = obj_ptr;
     obj_ptr->pre = NULL;
