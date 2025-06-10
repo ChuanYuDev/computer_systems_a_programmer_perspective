@@ -1,9 +1,25 @@
 #include "cache.h"
 
 /* Object helper function */
-void obj_init(obj_t *obj_ptr)
+/*
+ * obj_init
+ *  Dynamically allocate object and obj.buf
+ *  Initialize obj.buf based on object_buf and object_size
+ */
+obj_t *obj_init(char *object_buf, int object_size, request_line_t *rl_ptr)
 {
-    obj_ptr->size = 0;
+    obj_t *obj_ptr = (obj_t *) malloc(sizeof(obj_t));
+
+    obj_ptr->buf = malloc(object_size);
+    memcpy(obj_ptr->buf, object_buf, object_size);
+
+    rl_copy(&obj_ptr->rl, rl_ptr);
+
+    obj_ptr->pre = obj_ptr->next = NULL;
+
+    obj_ptr->size = object_size;
+
+    return obj_ptr;
 }
 
 /* 
@@ -97,7 +113,7 @@ void cache_print(cache_t *cache_ptr)
  *  NULL, if no cache matched with rl_ptr
  *  First obj ptr, if any cache matched with rl_ptr
  */
-obj_t * cache_read(cache_t *cache_ptr, request_line_t *rl_ptr)
+obj_t *cache_read(cache_t *cache_ptr, request_line_t *rl_ptr)
 {
     P(&cache_ptr->mutex);
     cache_ptr->read_cnt++;
