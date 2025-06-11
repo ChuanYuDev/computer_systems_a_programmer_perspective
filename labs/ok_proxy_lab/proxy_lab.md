@@ -11,7 +11,8 @@
     - [Part I: implementing a sequential web proxy](#part-i-implementing-a-sequential-web-proxy)
     - [Part II: dealing with multiple concurrent requests](#part-ii-dealing-with-multiple-concurrent-requests)
     - [Part III: caching web objects](#part-iii-caching-web-objects)
-    - [TO DO](#to-do)
+
+- [TO DO](#to-do)
 
 ## Introduction
 - Students implement a concurrent caching Web proxy that sits between their browser and the rest of the World Wide Web
@@ -207,6 +208,16 @@
     Killing proxy
     cacheScore: 15/15
     ```
+
+- Web browsers
+    - Test proxy using the 139.0.4 Mozilla Firefox
+
+    - Configure Firefox to work with a proxy
+
+        ![](./images/firefox_proxy_configure.jpg)
+
+    - It works well with `tiny` server or other servers with only `GET` http request
+        - For example, when I connect to `wwww.google.com`, it uses `CONNECT` method
     
 ### TO DO:
 - Error handling
@@ -216,9 +227,11 @@
 
 - Proxy ignore SIGPIPE signal (page 964)?
     - `write` return EPIPE errors?
+    - How to generate this error?
 
 - Prematurely close, `read` turn -1 with `errno` set to `ECONNRESET`
     - Proxy should not terminate due to this error
+    - How to generate this error?
 
 
 - `free sbuf` in `SIGINT` signal handler

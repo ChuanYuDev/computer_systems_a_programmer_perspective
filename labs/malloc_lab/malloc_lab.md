@@ -4,6 +4,8 @@
 - [Introduction](#introduction)
 - [Duration](#duration)
 - [Chapter](#chapter)
+- [Trace file](#trace-file)
+- [Solution](#solution)
 
 ## Introduction
 - Students implement their own versions of `malloc`, `free`, and `realloc`
@@ -14,5 +16,12 @@
 - When students finish this one, they really understand pointers!
 
 ## Duration
-- 2025/5/11 - Due: 2025/5/31
+- 2025/6/12 - Due: 2025/7/15
+
 ## Chapter
+- Chapter 9: Virtual Memory
+
+## Trace file
+- Download trace file separately
+
+## Solution
