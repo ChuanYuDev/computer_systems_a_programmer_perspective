@@ -81,12 +81,13 @@ void cache_print(cache_t *cache_ptr)
     
     V(&cache_ptr->mutex);
 
-    printf("Cache size: %d\n", cache_ptr->size);
+    printf("Cache info:\nCache size: %d\n", cache_ptr->size);
 
     obj_t *obj_ptr = cache_ptr->first_obj_ptr;
 
     while (obj_ptr)
     {
+        printf("Object info:\n");
         rl_print(&obj_ptr->rl);
         printf("Object size: %d\n", obj_ptr->size);
 
@@ -161,28 +162,28 @@ void cache_move_first(cache_t *cache_ptr, obj_t *obj_ptr)
 
     /* Critical section, writing happens */
 
-    /* obj_ptr is already the first object
+    /* If obj_ptr is already the first object, obj_ptr->pre == NULL, do nothing except V operation
      * Also ensure cache_ptr->first_obj_ptr is not NULL */
-    if (!obj_ptr->pre)
-        return;
-    
-    /* Handle obj_ptr->pre and obj_ptr->next */
-    obj_ptr->pre->next = obj_ptr->next;
+    if (obj_ptr->pre)
+    {
+        /* Handle obj_ptr->pre and obj_ptr->next */
+        obj_ptr->pre->next = obj_ptr->next;
 
-    if (obj_ptr->next)
-        obj_ptr->next->pre = obj_ptr->pre;
-    
-    else
-        /* If obj_ptr is the last object, after it moves first, the previous of obj_ptr should be pointed by cache_ptr->last_obj_ptr */
-        cache_ptr->last_obj_ptr = obj_ptr->pre;
-    
-    /* Handle obj_ptr and cache_ptr->first_obj_ptr */
-    obj_ptr->next = cache_ptr->first_obj_ptr;
-    cache_ptr->first_obj_ptr->pre = obj_ptr;
+        if (obj_ptr->next)
+            obj_ptr->next->pre = obj_ptr->pre;
+        
+        else
+            /* If obj_ptr is the last object, after it moves first, the previous of obj_ptr should be pointed by cache_ptr->last_obj_ptr */
+            cache_ptr->last_obj_ptr = obj_ptr->pre;
+        
+        /* Handle obj_ptr and cache_ptr->first_obj_ptr */
+        obj_ptr->next = cache_ptr->first_obj_ptr;
+        cache_ptr->first_obj_ptr->pre = obj_ptr;
 
-    /* Handle obj_ptr and cache_ptr */
-    cache_ptr->first_obj_ptr = obj_ptr;
-    obj_ptr->pre = NULL;
+        /* Handle obj_ptr and cache_ptr */
+        cache_ptr->first_obj_ptr = obj_ptr;
+        obj_ptr->pre = NULL;
+    }
 
     /* Critical section, writing ends */
 
@@ -204,20 +205,20 @@ void cache_evict_last(cache_t *cache_ptr)
     P(&cache_ptr->w);
 
     /* Critical section, writing happens */
-    if (!cache_ptr->last_obj_ptr)
-        return;
+    if (cache_ptr->last_obj_ptr)
+    {
+        obj_t *last_obj_ptr = cache_ptr->last_obj_ptr;
+        
+        if (last_obj_ptr->pre)
+            last_obj_ptr->pre->next = NULL;
+        else
+            cache_ptr->first_obj_ptr = NULL;
 
-    obj_t *last_obj_ptr = cache_ptr->last_obj_ptr;
-    
-    if (last_obj_ptr->pre)
-        last_obj_ptr->pre->next = NULL;
-    else
-        cache_ptr->first_obj_ptr = NULL;
+        cache_ptr->last_obj_ptr = last_obj_ptr->pre;
+        cache_ptr->size -= last_obj_ptr->size;
 
-    cache_ptr->last_obj_ptr = last_obj_ptr->pre;
-    cache_ptr->size -= last_obj_ptr->size;
-
-    obj_deinit(last_obj_ptr);
+        obj_deinit(last_obj_ptr);
+    }
 
     /* Critical section, writing ends */
 

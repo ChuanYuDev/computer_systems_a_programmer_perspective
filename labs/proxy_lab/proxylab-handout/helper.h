@@ -64,6 +64,8 @@ int Kill(pid_t pid, int signum);
 /* Signal wrappers */
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);
+int Sigprocmask(int how, const sigset_t *set, sigset_t *oldset);
+int Sigfillset(sigset_t *set);
 
 /* Unix I/O wrappers */
 int Close(int fd);

@@ -150,45 +150,48 @@
     - Multiple readers can access the cache (cache unchanged)
     - After read, return pointer to the item
 
+    - If point != NULL (In cache)
+        - Get cached object
+        - Change cache organization to implement LRU
+        - Serve object to client
+
     - If pointer == NULL (No cache)
         - Assign `MAX_OBJECT_SIZE` buffer `object_buf`
 
             ```c
             char object_buf[MAX_OBJECT_SIZE]; 
+            char *object_ptr = object_buf;
             ```
+        
+        - Cumulative bytes `total_bytes`
 
         - Connect to server
 
         - Read `MAXBUF` object into `buf`
             - Serve object to client
 
-            - If `read_bytes` + `object_size` > `MAX_OBJECT_SIZE`
-                - Abort cache process
+                ```
+                total_bytes += read_bytes
+                ```
 
-            - If `read_bytes` + `object_size` <= `MAX_OBJECT_SIZE`
+            - If `total_bytes` <= `MAX_OBJECT_SIZE`
                 - Append `buf` to `object_buf`
 
                     ```
-                    memcpy(object_buf + object size, buf, read_bytes)
+                    memcpy(object_ptr, buf, read_bytes);
+                    object_ptr += read_bytes
                     ```
                 
                 - Repeat read until EOF
 
                 - Dynamically Allocate `obj_t` and `obj.buf`
                     - Init `obj.buf` based on `object_buf` and object size
-
-        - If cache size + object size <= `MAX_CACHE_SIZE`
-            - Store object into cache
         
         - If cache size + object size > `MAX_CACHE_SIZE`
             - Evict some the least recently used (LRU) objects until size <= `MAX_CACHE_SIZE`
-            - Store object into cache
-    
-    - If point != NULL (In cache)
-        - Get cached object
-        - Change cache organization to implement LRU
-        - Serve object to client
 
+        - Store object into cache
+    
 ### TO DO:
 - Error handling
     - If `P(v)` error, what should I do?

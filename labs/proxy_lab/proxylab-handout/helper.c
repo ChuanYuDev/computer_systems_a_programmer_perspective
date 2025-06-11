@@ -52,6 +52,26 @@ handler_t *Signal(int signum, handler_t *handler)
     return (old_action.sa_handler);
 }
 
+int Sigprocmask(int how, const sigset_t *set, sigset_t *oldset)
+{
+    int rc;
+
+    if ((rc = sigprocmask(how, set, oldset)) < 0)
+        unix_error("Sigprocmask error");
+    
+    return rc;
+}
+
+int Sigfillset(sigset_t *set)
+{
+    int rc;
+
+    if ((rc = sigfillset(set)) < 0)
+        unix_error("Sigfillset error");
+    
+    return rc;
+}
+
 /* Unix I/O wrappers */
 int Close(int fd)
 {
@@ -385,7 +405,7 @@ void rl_copy(request_line_t *dest, request_line_t *src)
  */
 int is_rl_equal(request_line_t *rl1, request_line_t *rl2)
 {
-    !strcmp(rl1->hostname, rl2->hostname) && !strcmp(rl1->port, rl2->port) && !strcmp(rl1->path, rl2->path);
+    return !strcmp(rl1->hostname, rl2->hostname) && !strcmp(rl1->port, rl2->port) && !strcmp(rl1->path, rl2->path);
 }
 
 /* Reentrant protocol-independent client/server helpers */

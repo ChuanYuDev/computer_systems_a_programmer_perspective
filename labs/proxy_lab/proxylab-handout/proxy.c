@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "sbuf.h"
+#include "cache.h"
 
 #define N_THERADS 4
 #define SBUF_SIZE 16
@@ -21,6 +22,7 @@ void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *
 void sigint_handler(int sig);
 
 sbuf_t sbuf;
+cache_t cache;
 
 int main(int argc, char **argv)
 {
@@ -48,7 +50,11 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    /* Initialize bounded buffer */
     sbuf_init(&sbuf, SBUF_SIZE);
+
+    /* Initialize cache */
+    cache_init(&cache);
 
     for (int i = 0; i < N_THERADS; ++i)
         Pthread_create(&tid, thread, NULL);
@@ -83,6 +89,10 @@ void *thread(void *vargp)
     {
         connfd = sbuf_remove(&sbuf); 
         handle_client(connfd);
+
+        /* Check cache */
+        cache_print(&cache);
+
         Close(connfd);
     }
 }
@@ -119,6 +129,17 @@ void handle_client(int connfd)
     if (client_rl.hostname[0] == '\0')
     {
         client_error(connfd, client_rl.hostname, "400", "Bad request", "Proxy can't find server hostname");
+        return;
+    }
+
+    /* Read the cache */
+    obj_t *obj_ptr = cache_read(&cache, &client_rl);
+
+    /* Find web object in cache */
+    if (obj_ptr)
+    {
+        cache_move_first(&cache, obj_ptr);
+        Rio_writen(connfd, obj_ptr->buf, obj_ptr->size);
         return;
     }
 
@@ -208,8 +229,13 @@ void parse_uri(char *uri, request_line_t *rlp)
 void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *client_rp)
 {
     char buf[MAXBUF], line[MAXLINE];
+
     ssize_t read_bytes;
+    int total_bytes = 0;
     char contain_host = 0;
+
+    char temp_object_buf[MAX_OBJECT_SIZE];
+    char *temp_object_ptr = temp_object_buf;
 
     char *user_agent_name = "User-Agent", *connection_name = "Connection", *proxy_connection_name = "Proxy-Connection";
 
@@ -254,7 +280,7 @@ void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *
     sprintf(buf, "%s: close\r\n\r\n", proxy_connection_name);
     Rio_writen(clientfd, buf, strlen(buf));
 
-    /* Receive server HTTP response and send to the client*/
+    /* Receive server HTTP response and send to the client */
     do
     {
         read_bytes = Rio_readn(clientfd, buf, MAXBUF);
@@ -262,21 +288,53 @@ void handle_server(int clientfd, int connfd, request_line_t *client_rlp, rio_t *
 
         printf("Read bytes from server: %ld\n", read_bytes);
         fflush(stdout);
+
+        total_bytes += read_bytes;
+
+        if (total_bytes <= MAX_OBJECT_SIZE)
+        {
+            memcpy(temp_object_ptr, buf, read_bytes);
+            temp_object_ptr += read_bytes;
+        }
     }
     while (read_bytes == MAXBUF);
+
+    printf("Read total bytes from server: %d\n", total_bytes);
+
+    if (total_bytes > MAX_OBJECT_SIZE)
+        return;
+
+    obj_t *obj_ptr = obj_init(temp_object_buf, total_bytes, client_rlp);
+
+    while(cache.size + obj_ptr->size > MAX_CACHE_SIZE)
+    {
+        cache_evict_last(&cache);
+    }
+
+    cache_insert(&cache, obj_ptr);
+    return;
 }
 
 void sigint_handler(int sig) 
 {
     int olderrno = errno;
 
+    sigset_t mask_all, prev_all;
+
+    /* Block all the signal because free, printf are not async-signal-safe functions */
+    Sigfillset(&mask_all);
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+
     sbuf_deinit(&sbuf);
+    cache_deinit(&cache);
 
     printf("Kill proxy process group, process group id: %d\n", getpgrp());
     fflush(stdout);
 
     // Kill(-getpgrp(), SIGKILL);
     Kill(getpid(), SIGKILL);
+
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
 
     errno = olderrno;
     return;

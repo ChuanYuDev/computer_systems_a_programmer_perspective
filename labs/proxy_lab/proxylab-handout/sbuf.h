@@ -3,6 +3,7 @@
 
 #include "helper.h"
 
+/* Bounded buffer structure for producer-consumer problem */
 typedef struct
 {
     int *buf;       /* Buffer array */

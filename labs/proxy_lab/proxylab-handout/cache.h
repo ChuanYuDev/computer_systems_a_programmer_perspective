@@ -3,7 +3,7 @@
 
 #include "helper.h"
 
-#define KEY_BUFSIZE 8192
+/* Cache for storing web objects */
 typedef struct obj_type
 {
     void *buf;
