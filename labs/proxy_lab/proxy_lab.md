@@ -191,6 +191,22 @@
             - Evict some the least recently used (LRU) objects until size <= `MAX_CACHE_SIZE`
 
         - Store object into cache
+
+- Result:
+
+    ```
+    *** Cache ***
+    Starting tiny on port 30131
+    Starting proxy on port 18641
+    Fetching ./tiny/tiny.c into ./.proxy using the proxy
+    Fetching ./tiny/home.html into ./.proxy using the proxy
+    Fetching ./tiny/csapp.c into ./.proxy using the proxy
+    Killing tiny
+    Fetching a cached copy of ./tiny/home.html into ./.noproxy
+    Success: Was able to fetch tiny/home.html from the cache.
+    Killing proxy
+    cacheScore: 15/15
+    ```
     
 ### TO DO:
 - Error handling
