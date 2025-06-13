@@ -6,6 +6,7 @@
 - [Chapter](#chapter)
 - [Trace file](#trace-file)
 - [Solution](#solution)
+- [TO DO](#to-do)
 
 ## Introduction
 - Students implement their own versions of `malloc`, `free`, and `realloc`
@@ -16,7 +17,7 @@
 - When students finish this one, they really understand pointers!
 
 ## Duration
-- 2025/6/12 - Due: 2025/7/15
+- 2025/6/20 - Due: 2025/7/10
 
 ## Chapter
 - Chapter 9: Virtual Memory
@@ -25,3 +26,11 @@
 - Download trace file separately
 
 ## Solution
+
+## TO DO:
+- Compile warning?
+
+    ```
+    /usr/bin/ld: memlib.o: warning: relocation in read-only section `.text'
+    /usr/bin/ld: warning: creating DT_TEXTREL in a PIE
+    ```
