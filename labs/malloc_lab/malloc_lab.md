@@ -4,7 +4,11 @@
 - [Introduction](#introduction)
 - [Duration](#duration)
 - [Chapter](#chapter)
-- [Trace file](#trace-file)
+
+- [Prerequisite](#prerequisite)
+    - [Trace file](#trace-file)
+    - [`memlib.c`](#memlibc)
+
 - [Solution](#solution)
 - [TO DO](#to-do)
 
@@ -22,8 +26,17 @@
 ## Chapter
 - Chapter 9: Virtual Memory
 
-## Trace file
+## Prerequisite
+### Trace file
 - Download trace file separately
+
+### `memlib.c`
+- Static variable comments correction, add `plus 1`
+
+    ```c
+    static char *mem_brk;        /* points to last byte of heap plus 1 */
+    static char *mem_max_addr;   /* largest legal heap address plus 1 */ 
+    ```
 
 ## Solution
 

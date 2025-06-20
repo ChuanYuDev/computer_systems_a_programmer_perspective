@@ -96,8 +96,15 @@ void *mm_realloc(void *ptr, size_t size)
 }
 
 
+/*
+ * mm_check - Heap consistency checker
+ *
+ * */
 
+int mm_check(void)
+{
 
+}
 
 
 
