@@ -4,10 +4,8 @@
 - [Introduction](#introduction)
 - [Duration](#duration)
 - [Chapter](#chapter)
-
-- [Prerequisite](#prerequisite)
-    - [Trace file](#trace-file)
-    - [`memlib.c`](#memlibc)
+- [Trace file](#trace-file)
+- [Notes](#notes)
 
 - [Solution](#solution)
 - [TO DO](#to-do)
@@ -26,24 +24,28 @@
 ## Chapter
 - Chapter 9: Virtual Memory
 
-## Prerequisite
-### Trace file
+## Trace file
 - Download trace file separately
 
-### `memlib.c`
-- Static variable comments correction, add `plus 1`
+## Notes
+- `memlib.c`
+    - Static variable comments correction, add `plus 1`
 
-    ```c
-    static char *mem_brk;        /* points to last byte of heap plus 1 */
-    static char *mem_max_addr;   /* largest legal heap address plus 1 */ 
-    ```
+        ```c
+        static char *mem_brk;        /* points to last byte of heap plus 1 */
+        static char *mem_max_addr;   /* largest legal heap address plus 1 */ 
+        ```
 
-## Solution
-
-## TO DO:
-- Compile warning?
+- Compile warning
 
     ```
     /usr/bin/ld: memlib.o: warning: relocation in read-only section `.text'
     /usr/bin/ld: warning: creating DT_TEXTREL in a PIE
     ```
+    - Because the original file folder contains `clock.o`, `fcyc.o`, `memlib.o` files, if `make` directly, it will use these files to compile which leads to the compile warning
+
+    - Use `make clean` first
+
+## Solution
+
+## TO DO:

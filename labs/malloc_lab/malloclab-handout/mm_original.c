@@ -24,11 +24,11 @@
  ********************************************************/
 team_t team = {
     /* Team name */
-    "Nteam",
+    "ateam",
     /* First member's full name */
-    "neal",
+    "Harry Bovik",
     /* First member's email address */
-    "test@gmail.com",
+    "bovik@cs.cmu.edu",
     /* Second member's full name (leave blank if none) */
     "",
     /* Second member's email address (leave blank if none) */
@@ -96,15 +96,8 @@ void *mm_realloc(void *ptr, size_t size)
 }
 
 
-/*
- * mm_check - Heap consistency checker
- *
- * */
 
-int mm_check(void)
-{
-    return 1;
-}
+
 
 
 
